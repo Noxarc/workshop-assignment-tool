@@ -1,0 +1,588 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:WorkshopAssignment.Views.Controls"
+        xmlns:converters="clr-namespace:WorkshopAssignment.Converters"
+        x:Class="WorkshopAssignment.Views.MainWindow"
+        Title="{Binding ViewModel[mainwindow.title]}"
+        Width="1200" Height="800"
+        MinWidth="650" MinHeight="600"
+        WindowState="Maximized"
+        Background="{StaticResource HeaderBlueBrush}"
+        Icon="/assets/Icon.ico"
+        KeyDown="Window_KeyDown"
+        PointerPressed="OnBackgroundPointerPressed">
+
+    <Window.Styles>
+        <!-- Responsive layout styles using Classes -->
+        <!-- Large mode: >= 700px - two column layout -->
+        <Style Selector="Window.large-mode StackPanel#RightColumnWidgets">
+            <Setter Property="IsVisible" Value="True"/>
+        </Style>
+        <!-- No MaxWidth constraint on WidgetContainer in large mode -->
+        <Style Selector="Window.large-mode controls|ImportWidget#ImportWidget">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+        <Style Selector="Window.large-mode controls|SettingsWidget#SettingsWidget">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+        <Style Selector="Window.large-mode controls|ExportWidget#ExportWidget">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+        <Style Selector="Window.large-mode controls|RuntimeWidget#RuntimeWidgetSmall">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+        <Style Selector="Window.large-mode controls|RuntimeWidget#RuntimeWidget">
+            <Setter Property="IsVisible" Value="True"/>
+        </Style>
+
+        <!-- Small mode: < 700px - single column layout -->
+        <Style Selector="Window.small-mode StackPanel#RightColumnWidgets">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+        <!-- No MaxWidth constraint on WidgetContainer in small mode -->
+        <Style Selector="Window.small-mode controls|ImportWidget#ImportWidget">
+            <Setter Property="IsVisible" Value="True"/>
+        </Style>
+        <Style Selector="Window.small-mode controls|DataWidget#DataWidgetSmall">
+            <Setter Property="IsVisible" Value="True"/>
+        </Style>
+        <Style Selector="Window.small-mode controls|SettingsWidget#SettingsWidget">
+            <Setter Property="IsVisible" Value="True"/>
+        </Style>
+        <Style Selector="Window.small-mode controls|ExportWidget#ExportWidget">
+            <Setter Property="IsVisible" Value="True"/>
+        </Style>
+        <Style Selector="Window.small-mode controls|RuntimeWidget#RuntimeWidgetSmall">
+            <Setter Property="IsVisible" Value="True"/>
+        </Style>
+        <Style Selector="Window.small-mode controls|RuntimeWidget#RuntimeWidget">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+
+        <!-- Editable TextBox focus indicator for inline table editing -->
+        <!-- Subtle bottom-border + tinted background appears on focus so the user knows which cell is active -->
+        <Style Selector="Border#HeroWorkshopsContainer TextBox">
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Border#HeroWorkshopsContainer TextBox:focus">
+            <Setter Property="Background" Value="#E8F0FE"/>
+            <Setter Property="BorderThickness" Value="0,0,0,2"/>
+            <Setter Property="BorderBrush" Value="#4A90D9"/>
+            <Setter Property="Padding" Value="0,0,0,0"/>
+        </Style>
+        <Style Selector="Border#HeroWorkshopsContainer TextBox:not(:focus)">
+            <Setter Property="BorderThickness" Value="0,0,0,2"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+
+        <!-- Hero overlay fade animation -->
+        <Style Selector="Border#HeroPanel">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.35" Easing="CubicEaseOut"/>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.35" Easing="CubicEaseOut"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border#HeroBackdrop">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.35" Easing="CubicEaseOut"/>
+                </Transitions>
+            </Setter>
+        </Style>
+    </Window.Styles>
+
+
+    <Grid x:Name="RootGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="62"/>
+        </Grid.RowDefinitions>
+
+        <!-- Main Content Area with Background -->
+        <Grid Grid.Row="0">
+            <!-- Background image -->
+            <Border>
+                <Border.Background>
+                    <ImageBrush Source="avares://WorkshopAssignment/Resources/background.jpg"
+                                Stretch="UniformToFill"/>
+                </Border.Background>
+            </Border>
+
+            <!-- Scrollable Content -->
+            <ScrollViewer x:Name="MainScrollViewer" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <!-- Invisible focus sink - must be first child of ScrollViewer -->
+                    <Button x:Name="FocusSink" Width="0" Height="0" Opacity="0" Focusable="True"/>
+
+                    <!-- Main Content Container - solid blue-grey background, golden ratio (61.8% of screen) -->
+                    <Border x:Name="GlassContainer" CornerRadius="16"
+                            Background="#EEF2F7"
+                            BorderBrush="#dde3ea" BorderThickness="1"
+                            BoxShadow="0 2 12 0 #20000000"
+                            HorizontalAlignment="Center"
+                            Margin="16"
+                            ClipToBounds="True">
+                        <Panel>
+                            <!-- Content with padding -->
+                            <Border Padding="24,40,24,24">
+
+                        <StackPanel x:Name="WidgetContainer" HorizontalAlignment="Stretch" Spacing="16">
+
+                            <!-- Title - minimal large style -->
+                            <TextBlock Text="{Binding ViewModel[mainwindow.title]}"
+                                       FontSize="48" FontWeight="Light"
+                                       Foreground="#1a1a2e"
+                                       LetterSpacing="1"
+                                       HorizontalAlignment="Left"
+                                       Margin="0,8,0,30"/>
+
+                            <!-- Responsive Widget Layout -->
+                            <Grid x:Name="WidgetGrid">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="382*" MaxWidth="420"/>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="618*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Left Column: Import, Data, Settings, Runtime, Results, Export (single-column modes) -->
+                                <StackPanel Grid.Column="0" Spacing="16">
+                                    <controls:ImportWidget x:Name="ImportWidget"/>
+                                    <!-- SettingsWidget in left column -->
+                                    <controls:SettingsWidget x:Name="SettingsWidget"/>
+                                    <controls:DataWidget x:Name="DataWidgetSmall"/>
+                                    <!-- RuntimeWidget shown here in single-column modes -->
+                                    <controls:RuntimeWidget x:Name="RuntimeWidgetSmall"/>
+                                    <!-- RuntimeWidget for large mode - between Settings and Results in left column -->
+                                    <controls:RuntimeWidget x:Name="RuntimeWidget"/>
+                                    <!-- ResultsWidget shown in all modes -->
+                                    <controls:ResultsWidget x:Name="ResultsWidgetSmall"/>
+                                    <controls:ExportWidget x:Name="ExportWidget"/>
+                                </StackPanel>
+
+                                <!-- Right Column: Import, Settings, Export (only visible in Large mode) -->
+                                <StackPanel x:Name="RightColumnWidgets" Grid.Column="2" Spacing="16">
+                                    <controls:ImportWidget x:Name="ImportWidgetLarge"/>
+                                    <controls:SettingsWidget x:Name="SettingsWidgetLarge"/>
+                                    <controls:ExportWidget x:Name="ExportWidgetLarge"/>
+                                    <controls:ResultsWidget x:Name="ResultsWidget" IsVisible="False"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                            </Border>
+                        </Panel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+
+
+            <!-- Hero Expand Overlay -->
+            <Grid x:Name="HeroOverlay" IsVisible="False">
+                <!-- Dark backdrop -->
+                <Border x:Name="HeroBackdrop" Background="#80000000" Opacity="0"
+                        PointerPressed="HeroBackdrop_PointerPressed"/>
+
+                <!-- Frosted glass panel -->
+                <Border x:Name="HeroPanel" CornerRadius="16" Margin="24"
+                        MaxWidth="1400" Opacity="0"
+                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                        BoxShadow="0 16 64 0 #60000000"
+                        RenderTransformOrigin="0.5,0.5">
+                    <Border.Background>
+                        <SolidColorBrush Color="#FFFFFF" Opacity="0.95"/>
+                    </Border.Background>
+                    <Border.RenderTransform>
+                        <ScaleTransform ScaleX="1" ScaleY="1"/>
+                    </Border.RenderTransform>
+
+                    <Grid Margin="24,20">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header row: back button + title + count badge -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Button x:Name="HeroBackButton" Click="HeroBackButton_Click"
+                                    Background="Transparent" BorderThickness="0" Padding="8"
+                                    VerticalAlignment="Center" Margin="0,0,12,0">
+                                <!-- Back arrow using PathIcon -->
+                                <PathIcon Data="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"
+                                          Foreground="#02385a" Width="18" Height="18"/>
+                            </Button>
+                            <TextBlock x:Name="HeroTitle" Grid.Column="1"
+                                       FontSize="24" FontWeight="Bold" Foreground="#02385a"
+                                       VerticalAlignment="Center"/>
+                            <Border Grid.Column="2" CornerRadius="12" Padding="12,4"
+                                    Background="{StaticResource Teal500Brush}" VerticalAlignment="Center">
+                                <TextBlock x:Name="HeroCountText" Foreground="White"
+                                           FontSize="13" FontWeight="SemiBold"/>
+                            </Border>
+                        </Grid>
+
+                        <!-- Separator -->
+                        <Rectangle Grid.Row="1" Height="1" Fill="#E0E0E0" Margin="0,12"/>
+
+                            <!-- ========================================== -->
+                            <!-- WORKSHOP HERO TABLE - C1 Bold Header Design -->
+                            <!-- ========================================== -->
+                            <Border x:Name="HeroWorkshopsContainer"
+                                    Grid.Row="2"
+                                    CornerRadius="8"
+                                    ClipToBounds="True"
+                                    BorderThickness="1"
+                                    BorderBrush="#e0e0e0">
+                                
+                                <Grid RowDefinitions="Auto,*">
+                                    <!-- Header Bar with Gradient -->
+                                    <Border Grid.Row="0" Padding="24,20">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                                                <GradientStop Color="#021c3f" Offset="0"/>
+                                                <GradientStop Color="#02385a" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel Grid.Column="0" Spacing="4">
+                                                <TextBlock Text="Workshops" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding ViewModel[hero.workshopsSubtitle]}" Foreground="#7BC4D4" FontSize="13"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Table using ItemsControl — replaces DataGrid to fix Avalonia rendering bug in initially-hidden containers -->
+                                    <!-- HorizontalScrollBarVisibility="Auto" enables horizontal scroll when content exceeds viewport.
+                                         MinWidth on StackPanel ensures columns maintain minimum usable width. Number columns (WCol3-WCol7)
+                                         use Width="Auto" with SharedSizeGroup so they auto-size to header text (adapts to localization).
+                                         ID(60)+Name(200)+spacer+Timeslot(200)+spacer+Auto cols+margins(~50) = ~560px baseline -->
+                                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                                        <StackPanel Grid.IsSharedSizeScope="True" MinWidth="560">
+                                            <!-- Column Headers -->
+                                            <Grid Background="#f3f4f6" MinHeight="36">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="60"  SharedSizeGroup="WCol0"/>
+                                                    <ColumnDefinition Width="Auto" SharedSizeGroup="WCol1"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="200" SharedSizeGroup="WCol2"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto" SharedSizeGroup="WCol3"/>
+                                                    <ColumnDefinition Width="Auto" SharedSizeGroup="WCol4"/>
+                                                    <ColumnDefinition Width="Auto" SharedSizeGroup="WCol5"/>
+                                                    <ColumnDefinition Width="Auto" SharedSizeGroup="WCol6"/>
+                                                    <ColumnDefinition Width="Auto" SharedSizeGroup="WCol7"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock x:Name="WColId" Grid.Column="0" Text="ID" FontWeight="Bold" FontSize="11" Foreground="#6b7280" Margin="12,0" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="WColName" Grid.Column="1" Text="NAME" FontWeight="Bold" FontSize="11" Foreground="#6b7280" Margin="12,0" VerticalAlignment="Center" MinWidth="200"/>
+                                                <TextBlock x:Name="WColGroup" Grid.Column="3" Text="TIMESLOT" FontWeight="Bold" FontSize="11" Foreground="#6b7280" Margin="8,0" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="WColMin" Grid.Column="5" Text="MIN" FontWeight="Bold" FontSize="11" Foreground="#6b7280" Padding="6,0" Margin="12,0" VerticalAlignment="Center" TextAlignment="Center"/>
+                                                <TextBlock x:Name="WColMax" Grid.Column="6" Text="MAX" FontWeight="Bold" FontSize="11" Foreground="#6b7280" Padding="6,0" Margin="12,0" VerticalAlignment="Center" TextAlignment="Center"/>
+                                                <TextBlock x:Name="WColWished" Grid.Column="7" Text="WISHED" FontWeight="Bold" FontSize="11" Foreground="#6b7280" Padding="6,0" Margin="6,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                                <TextBlock x:Name="WColAssigned" Grid.Column="8" Text="ASSIGNED" FontWeight="Bold" FontSize="11" Foreground="#6b7280" Padding="6,0" Margin="6,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                                <TextBlock x:Name="WColUtilization" Grid.Column="9" Text="%" FontWeight="Bold" FontSize="11" Foreground="#6b7280" Padding="6,0" Margin="6,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                            </Grid>
+                                            <!-- Data Rows -->
+                                            <ItemsControl x:Name="HeroWorkshopsList">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border BorderBrush="#e5e7eb" BorderThickness="0,0,0,1" MinHeight="44">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="60"  SharedSizeGroup="WCol0"/>
+                                                                    <ColumnDefinition Width="Auto" SharedSizeGroup="WCol1"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="200" SharedSizeGroup="WCol2"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto" SharedSizeGroup="WCol3"/>
+                                                                    <ColumnDefinition Width="Auto" SharedSizeGroup="WCol4"/>
+                                                                    <ColumnDefinition Width="Auto" SharedSizeGroup="WCol5"/>
+                                                                    <ColumnDefinition Width="Auto" SharedSizeGroup="WCol6"/>
+                                                                    <ColumnDefinition Width="Auto" SharedSizeGroup="WCol7"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <!-- ID (read-only) -->
+                                                                <TextBlock Grid.Column="0" Text="{Binding Id}" Margin="12,0" VerticalAlignment="Center" Foreground="#555555" FontSize="12"/>
+                                                                <!-- Name (editable) -->
+                                                                <TextBox Grid.Column="1" Text="{Binding Name, Mode=TwoWay}" 
+                                                                         BorderThickness="0" Background="Transparent" Padding="0" Margin="12,0"
+                                                                         VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#02385a"
+                                                                         LostFocus="WorkshopField_LostFocus"/>
+                                                                <!-- Group (click-to-edit: TextBlock shown by default, ComboBox on click) -->
+                                                                <Panel Grid.Column="3" Margin="8,2" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{Binding TypeDisplay}" VerticalAlignment="Center"
+                                                                               Foreground="#374151" FontSize="13" Cursor="Hand"
+                                                                               PointerPressed="TypeCell_PointerPressed"/>
+                                                                    <ComboBox ItemsSource="{Binding AvailableTypeOptions}"
+                                                                              SelectedItem="{Binding SelectedTypeOption}"
+                                                                              MinWidth="120" IsVisible="False"
+                                                                              SelectionChanged="TypeComboBox_SelectionChanged"
+                                                                              DropDownClosed="TypeComboBox_DropDownClosed"/>
+                                                                </Panel>
+                                                                <!-- Min (editable, numeric-only with select-all on focus) -->
+                                                                <TextBox Grid.Column="5" Text="{Binding MinCapacity, Mode=TwoWay}"
+                                                                         BorderThickness="0" Background="Transparent" Padding="0" Margin="12,0"
+                                                                         VerticalAlignment="Center" HorizontalContentAlignment="Center" Foreground="#333333"
+                                                                         LostFocus="WorkshopField_LostFocus"
+                                                                         GotFocus="NumericField_GotFocus"
+                                                                         TextInput="NumericField_TextInput"/>
+                                                                <!-- Max (editable, numeric-only with select-all on focus) -->
+                                                                <TextBox Grid.Column="6" Text="{Binding Capacity, Mode=TwoWay}"
+                                                                         BorderThickness="0" Background="Transparent" Padding="0" Margin="12,0"
+                                                                         VerticalAlignment="Center" HorizontalContentAlignment="Center" Foreground="#333333"
+                                                                         LostFocus="WorkshopField_LostFocus"
+                                                                         GotFocus="NumericField_GotFocus"
+                                                                         TextInput="NumericField_TextInput"/>
+                                                                <!-- Wished (read-only, count of persons who listed this workshop in preferences) -->
+                                                                <TextBlock Grid.Column="7" Text="{Binding TimesWished}" Margin="0"
+                                                                           VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="#374151"/>
+                                                                <!-- Assigned (read-only) -->
+                                                                <TextBlock Grid.Column="8" Text="{Binding Assigned}" Margin="0"
+                                                                           VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="#374151"/>
+                                                                <!-- Utilization % (read-only, color-coded) -->
+                                                                <TextBlock Grid.Column="9" Text="{Binding UtilizationDisplay}" Margin="0"
+                                                                           VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                                           Foreground="{Binding UtilizationColor}" FontWeight="SemiBold" FontSize="12"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                </Grid>
+                            </Border>
+
+
+
+                            <!-- ========================================== -->
+                            <!-- PERSONS HERO TABLE - C1 Bold Header Design -->
+                            <!-- ========================================== -->
+                            <Border x:Name="HeroPersonsContainer"
+                                    Grid.Row="2"
+                                    CornerRadius="8"
+                                    ClipToBounds="True"
+                                    BorderThickness="1"
+                                    BorderBrush="#e0e0e0">
+
+                                <Grid RowDefinitions="Auto,*">
+                                    <!-- Header Bar with Gradient -->
+                                    <Border Grid.Row="0" Padding="24,20">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                                                <GradientStop Color="#021c3f" Offset="0"/>
+                                                <GradientStop Color="#02385a" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel Grid.Column="0" Spacing="4">
+                                                <TextBlock Text="People" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding ViewModel[hero.peopleSubtitle]}" Foreground="#7BC4D4" FontSize="13"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Table using ItemsControl — replaces DataGrid to fix Avalonia rendering bug in initially-hidden containers -->
+                                    <!-- HorizontalScrollBarVisibility="Auto" enables horizontal scroll when content exceeds viewport.
+                                         MinWidth on StackPanel ensures columns maintain their declared widths instead of compressing:
+                                         Name(180)+Info(120)+Friend(120)+Wish1-6(75x6)+Assigned(150)+Score(80)+margins(~220) = ~1320px -->
+                                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                                        <StackPanel Grid.IsSharedSizeScope="True" MinWidth="1320">
+                                            <!-- Column Headers: Name, Info, Friend, Wish1-6, Assigned, Score -->
+                                            <Grid Background="#f3f4f6" MinHeight="36">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" SharedSizeGroup="PCol0"/>
+                                                    <ColumnDefinition Width="120"  SharedSizeGroup="PCol1"/>
+                                                    <ColumnDefinition Width="120"  SharedSizeGroup="PCol2"/>
+                                                    <ColumnDefinition Width="75"  SharedSizeGroup="PCol3"/>
+                                                    <ColumnDefinition Width="75"  SharedSizeGroup="PCol4"/>
+                                                    <ColumnDefinition Width="75"  SharedSizeGroup="PCol5"/>
+                                                    <ColumnDefinition Width="75"  SharedSizeGroup="PCol6"/>
+                                                    <ColumnDefinition Width="75"  SharedSizeGroup="PCol7"/>
+                                                    <ColumnDefinition Width="75"  SharedSizeGroup="PCol8"/>
+                                                    <ColumnDefinition Width="150"  SharedSizeGroup="PCol9"/>
+                                                    <ColumnDefinition Width="80"   SharedSizeGroup="PCol10"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock x:Name="PColName" Grid.Column="0" Text="NAME" FontWeight="Bold" FontSize="11" Foreground="#6b7280" Margin="12,0" VerticalAlignment="Center"
+                                                           Cursor="Hand" PointerPressed="PersonSortHeader_PointerPressed" Tag="Name" MinWidth="180"/>
+                                                <TextBlock x:Name="PColInfo" Grid.Column="1" Text="INFO" FontWeight="Bold" FontSize="11" Foreground="#6b7280" Margin="12,0" VerticalAlignment="Center"
+                                                           Cursor="Hand" PointerPressed="PersonSortHeader_PointerPressed" Tag="Info"/>
+                                                <TextBlock x:Name="PColFriend" Grid.Column="2" Text="FRIEND" FontWeight="Bold" FontSize="11" Foreground="#6b7280" Margin="12,0" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="PColWish1" Grid.Column="3" Text="WISH 1" FontWeight="Bold" FontSize="11" Foreground="#6b7280" Margin="12,0" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="PColWish2" Grid.Column="4" Text="WISH 2" FontWeight="Bold" FontSize="11" Foreground="#6b7280" Margin="12,0" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="PColWish3" Grid.Column="5" Text="WISH 3" FontWeight="Bold" FontSize="11" Foreground="#6b7280" Margin="12,0" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="PColWish4" Grid.Column="6" Text="WISH 4" FontWeight="Bold" FontSize="11" Foreground="#6b7280" Margin="12,0" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="PColWish5" Grid.Column="7" Text="WISH 5" FontWeight="Bold" FontSize="11" Foreground="#6b7280" Margin="12,0" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="PColWish6" Grid.Column="8" Text="WISH 6" FontWeight="Bold" FontSize="11" Foreground="#6b7280" Margin="12,0" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="PColAssigned" Grid.Column="9" Text="ASSIGNED" FontWeight="Bold" FontSize="11" Foreground="#6b7280" Margin="12,0" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="PColScore" Grid.Column="10" Text="SCORE" FontWeight="Bold" FontSize="11" Foreground="#6b7280" Margin="12,0" VerticalAlignment="Center"
+                                                           Cursor="Hand" PointerPressed="PersonSortHeader_PointerPressed" Tag="SatisfactionScore"/>
+                                            </Grid>
+                                            <!-- Data Rows -->
+                                            <ItemsControl x:Name="HeroPersonsList">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border BorderBrush="#e5e7eb" BorderThickness="0,0,0,1" MinHeight="44">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto" SharedSizeGroup="PCol0"/>
+                                                                    <ColumnDefinition Width="120"  SharedSizeGroup="PCol1"/>
+                                                                    <ColumnDefinition Width="120"  SharedSizeGroup="PCol2"/>
+                                                                    <ColumnDefinition Width="75"  SharedSizeGroup="PCol3"/>
+                                                                    <ColumnDefinition Width="75"  SharedSizeGroup="PCol4"/>
+                                                                    <ColumnDefinition Width="75"  SharedSizeGroup="PCol5"/>
+                                                                    <ColumnDefinition Width="75"  SharedSizeGroup="PCol6"/>
+                                                                    <ColumnDefinition Width="75"  SharedSizeGroup="PCol7"/>
+                                                                    <ColumnDefinition Width="75"  SharedSizeGroup="PCol8"/>
+                                                                    <ColumnDefinition Width="150"  SharedSizeGroup="PCol9"/>
+                                                                    <ColumnDefinition Width="80"   SharedSizeGroup="PCol10"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <!-- Name -->
+                                                                <TextBlock Grid.Column="0" Text="{Binding Name}" TextTrimming="CharacterEllipsis"
+                                                                           Margin="12,0" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#02385a"/>
+                                                                <!-- Info -->
+                                                                <TextBlock Grid.Column="1" Text="{Binding Info}" Margin="12,0" VerticalAlignment="Center" Foreground="#555555" TextAlignment="Left" HorizontalAlignment="Left"/>
+                                                                <!-- Friend -->
+                                                                <TextBlock Grid.Column="2" Text="{Binding FriendName}" Margin="12,0" VerticalAlignment="Center" Foreground="#555555" TextAlignment="Left" HorizontalAlignment="Left"/>
+                                                                <!-- Wish 1 (chips) -->
+                                                                <ItemsControl Grid.Column="3" ItemsSource="{Binding Wish1Chips}" VerticalAlignment="Center" Margin="12,0">
+                                                                    <ItemsControl.ItemsPanel>
+                                                                        <ItemsPanelTemplate>
+                                                                            <StackPanel Orientation="Horizontal"/>
+                                                                        </ItemsPanelTemplate>
+                                                                    </ItemsControl.ItemsPanel>
+                                                                    <ItemsControl.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <Border Background="{Binding ChipColor}" CornerRadius="4" Padding="8,4" Margin="0,0,4,0" ToolTip.Tip="{Binding Name}">
+                                                                                <TextBlock Text="{Binding Id}" FontSize="12" FontWeight="Medium" Foreground="#333333"/>
+                                                                            </Border>
+                                                                        </DataTemplate>
+                                                                    </ItemsControl.ItemTemplate>
+                                                                </ItemsControl>
+                                                                <!-- Wish 2 (chips) -->
+                                                                <ItemsControl Grid.Column="4" ItemsSource="{Binding Wish2Chips}" VerticalAlignment="Center" Margin="12,0">
+                                                                    <ItemsControl.ItemsPanel>
+                                                                        <ItemsPanelTemplate>
+                                                                            <StackPanel Orientation="Horizontal"/>
+                                                                        </ItemsPanelTemplate>
+                                                                    </ItemsControl.ItemsPanel>
+                                                                    <ItemsControl.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <Border Background="{Binding ChipColor}" CornerRadius="4" Padding="8,4" Margin="0,0,4,0" ToolTip.Tip="{Binding Name}">
+                                                                                <TextBlock Text="{Binding Id}" FontSize="12" FontWeight="Medium" Foreground="#333333"/>
+                                                                            </Border>
+                                                                        </DataTemplate>
+                                                                    </ItemsControl.ItemTemplate>
+                                                                </ItemsControl>
+                                                                <!-- Wish 3 (chips) -->
+                                                                <ItemsControl Grid.Column="5" ItemsSource="{Binding Wish3Chips}" VerticalAlignment="Center" Margin="12,0">
+                                                                    <ItemsControl.ItemsPanel>
+                                                                        <ItemsPanelTemplate>
+                                                                            <StackPanel Orientation="Horizontal"/>
+                                                                        </ItemsPanelTemplate>
+                                                                    </ItemsControl.ItemsPanel>
+                                                                    <ItemsControl.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <Border Background="{Binding ChipColor}" CornerRadius="4" Padding="8,4" Margin="0,0,4,0" ToolTip.Tip="{Binding Name}">
+                                                                                <TextBlock Text="{Binding Id}" FontSize="12" FontWeight="Medium" Foreground="#333333"/>
+                                                                            </Border>
+                                                                        </DataTemplate>
+                                                                    </ItemsControl.ItemTemplate>
+                                                                </ItemsControl>
+                                                                <!-- Wish 4 (chips) -->
+                                                                <ItemsControl Grid.Column="6" ItemsSource="{Binding Wish4Chips}" VerticalAlignment="Center" Margin="12,0">
+                                                                    <ItemsControl.ItemsPanel>
+                                                                        <ItemsPanelTemplate>
+                                                                            <StackPanel Orientation="Horizontal"/>
+                                                                        </ItemsPanelTemplate>
+                                                                    </ItemsControl.ItemsPanel>
+                                                                    <ItemsControl.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <Border Background="{Binding ChipColor}" CornerRadius="4" Padding="8,4" Margin="0,0,4,0" ToolTip.Tip="{Binding Name}">
+                                                                                <TextBlock Text="{Binding Id}" FontSize="12" FontWeight="Medium" Foreground="#333333"/>
+                                                                            </Border>
+                                                                        </DataTemplate>
+                                                                    </ItemsControl.ItemTemplate>
+                                                                </ItemsControl>
+                                                                <!-- Wish 5 (chips) -->
+                                                                <ItemsControl Grid.Column="7" ItemsSource="{Binding Wish5Chips}" VerticalAlignment="Center" Margin="12,0">
+                                                                    <ItemsControl.ItemsPanel>
+                                                                        <ItemsPanelTemplate>
+                                                                            <StackPanel Orientation="Horizontal"/>
+                                                                        </ItemsPanelTemplate>
+                                                                    </ItemsControl.ItemsPanel>
+                                                                    <ItemsControl.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <Border Background="{Binding ChipColor}" CornerRadius="4" Padding="8,4" Margin="0,0,4,0" ToolTip.Tip="{Binding Name}">
+                                                                                <TextBlock Text="{Binding Id}" FontSize="12" FontWeight="Medium" Foreground="#333333"/>
+                                                                            </Border>
+                                                                        </DataTemplate>
+                                                                    </ItemsControl.ItemTemplate>
+                                                                </ItemsControl>
+                                                                <!-- Wish 6 (chips) -->
+                                                                <ItemsControl Grid.Column="8" ItemsSource="{Binding Wish6Chips}" VerticalAlignment="Center" Margin="12,0">
+                                                                    <ItemsControl.ItemsPanel>
+                                                                        <ItemsPanelTemplate>
+                                                                            <StackPanel Orientation="Horizontal"/>
+                                                                        </ItemsPanelTemplate>
+                                                                    </ItemsControl.ItemsPanel>
+                                                                    <ItemsControl.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <Border Background="{Binding ChipColor}" CornerRadius="4" Padding="8,4" Margin="0,0,4,0" ToolTip.Tip="{Binding Name}">
+                                                                                <TextBlock Text="{Binding Id}" FontSize="12" FontWeight="Medium" Foreground="#333333"/>
+                                                                            </Border>
+                                                                        </DataTemplate>
+                                                                    </ItemsControl.ItemTemplate>
+                                                                </ItemsControl>
+                                                                <!-- Assigned (chips with dynamic border: teal=half-day, black=Type1, red=None) -->
+                                                                <ItemsControl Grid.Column="9" ItemsSource="{Binding AssignedChips}" VerticalAlignment="Center" Margin="12,0">
+                                                                    <ItemsControl.ItemsPanel>
+                                                                        <ItemsPanelTemplate>
+                                                                            <StackPanel Orientation="Horizontal"/>
+                                                                        </ItemsPanelTemplate>
+                                                                    </ItemsControl.ItemsPanel>
+                                                                    <ItemsControl.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <Border Background="{Binding ChipColor}" CornerRadius="4" Padding="8,4" Margin="0,0,4,0"
+                                                                                    BorderBrush="{Binding BorderColor}" BorderThickness="2" ToolTip.Tip="{Binding Name}">
+                                                                                <TextBlock Text="{Binding Id}" FontSize="12" FontWeight="Medium" Foreground="#333333"/>
+                                                                            </Border>
+                                                                        </DataTemplate>
+                                                                    </ItemsControl.ItemTemplate>
+                                                                </ItemsControl>
+                                                                <!-- Satisfaction Score -->
+                                                                <TextBlock Grid.Column="10" Text="{Binding SatisfactionScore}" Margin="12,0" VerticalAlignment="Center"
+                                                                           Foreground="#374151" FontSize="12" HorizontalAlignment="Center"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                </Grid>
+                            </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+
+
+        <!-- Bottom Progress Bar -->
+        <Grid Grid.Row="1" Background="{StaticResource DarkNavyBrush}">
+            <controls:ProgressBarWidget x:Name="ProgressBar"
+                                        IsImportDone="{Binding ViewModel.IsImportDone}"
+                                        IsSettingsDone="{Binding ViewModel.IsSettingsDone}"
+                                        IsRunDone="{Binding ViewModel.IsRunDone}"
+                                        IsExportDone="{Binding ViewModel.IsExportDone}"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                                        Margin="24,0"/>
+        </Grid>
+    </Grid>
+</Window>

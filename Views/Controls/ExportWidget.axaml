@@ -1,0 +1,149 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="WorkshopAssignment.Views.Controls.ExportWidget">
+
+    <UserControl.Styles>
+        <!-- Pulsing glow animation for attention state -->
+        <Style Selector="Border.pulse-glow">
+            <Style.Animations>
+                <Animation Duration="0:0:2" IterationCount="INFINITE" PlaybackDirection="Alternate">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="BoxShadow" Value="0 0 8 0 #3055acbf"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="BoxShadow" Value="0 0 20 0 #5055acbf"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        
+        <!-- Export button hover effect -->
+        <Style Selector="Border.export-btn:pointerover">
+            <Setter Property="Background" Value="#F8FAFB"/>
+            <Setter Property="BoxShadow" Value="0 4 12 0 #2055acbf"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Border Background="#E6FFFFFF" BorderBrush="#b0b0b0" BorderThickness="1"
+            CornerRadius="6" Padding="16,12"
+            BoxShadow="0 4 12 0 #30000000">
+        <StackPanel Spacing="16">
+            <!-- Header -->
+            <TextBlock Text="{Binding ViewModel[export.pageTitle]}" FontSize="20" FontWeight="Bold" Foreground="#1a1a2e"/>
+
+            <!-- PDF/Excel Toggle Container -->
+            <Border CornerRadius="25" Padding="4" HorizontalAlignment="Center">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Color="{StaticResource ToggleContainerStart}" Offset="0"/>
+                        <GradientStop Color="{StaticResource ToggleContainerEnd}" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Grid>
+                    <!-- Sliding active pill -->
+                    <Border x:Name="ActivePill" 
+                            Width="72" 
+                            Height="32" 
+                            CornerRadius="16"
+                            HorizontalAlignment="Left">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                <GradientStop Color="{StaticResource Teal600}" Offset="0"/>
+                                <GradientStop Color="{StaticResource Teal500}" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.RenderTransform>
+                            <TranslateTransform X="0"/>
+                        </Border.RenderTransform>
+                    </Border>
+                    
+                    <!-- Toggle options -->
+                    <StackPanel Orientation="Horizontal">
+                        <!-- PDF Option -->
+                        <Border x:Name="PdfOption" Width="72" Height="32" Background="Transparent" Cursor="Hand"
+                                PointerPressed="PdfOption_Click">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="5">
+                                <!-- PDF Icon -->
+                                <PathIcon x:Name="PdfIcon" Width="14" Height="14" Foreground="White"
+                                          Data="M6 2C4.89 2 4 2.89 4 4V20C4 21.1 4.89 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2H6ZM13 9V3.5L18.5 9H13Z"/>
+                                <TextBlock x:Name="PdfText" Text="{Binding ViewModel[export.togglePdf]}" FontSize="12" FontWeight="SemiBold" Foreground="White"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Excel Option -->
+                        <Border x:Name="ExcelOption" Width="72" Height="32" Background="Transparent" Cursor="Hand"
+                                PointerPressed="ExcelOption_Click">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="5">
+                                <!-- Excel Icon -->
+                                <PathIcon x:Name="ExcelIcon" Width="14" Height="14" Foreground="{StaticResource TextGreyBrush}"
+                                          Data="M19 3H5C3.89 3 3 3.9 3 5V19C3 20.1 3.89 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM9 17H7V10H9V17ZM13 17H11V7H13V17ZM17 17H15V13H17V17Z"/>
+                                <TextBlock x:Name="ExcelText" Text="{Binding ViewModel[export.toggleExcel]}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextGreyBrush}"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Export Buttons Container -->
+            <Grid ColumnDefinitions="*,12,*">
+                <!-- Workshops Export Button -->
+                <Border x:Name="WorkshopsBtn" Grid.Column="0" Classes="export-btn"
+                        BorderBrush="{StaticResource Teal500Brush}"
+                        BorderThickness="1.5"
+                        CornerRadius="10"
+                        Background="White"
+                        Padding="12,16"
+                        Cursor="Hand"
+                        PointerPressed="WorkshopsBtn_Click">
+                    <Grid RowDefinitions="Auto,Auto,Auto,Auto">
+                        <!-- Calendar Icon -->
+                        <PathIcon Grid.Row="0" Width="28" Height="28" Foreground="{StaticResource Teal500Brush}" HorizontalAlignment="Center"
+                                  Data="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3.01 4.9 3.01 6L3 20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20ZM9 14H7V12H9V14ZM13 14H11V12H13V14ZM17 14H15V12H17V14ZM9 18H7V16H9V18ZM13 18H11V16H13V18ZM17 18H15V16H17V18Z"/>
+                        <TextBlock Grid.Row="1" Text="{Binding ViewModel[export.workshopsButton]}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource HeaderBlueBrush}" HorizontalAlignment="Center" Margin="0,8,0,4"/>
+                        <!-- Format Badge -->
+                        <Border Grid.Row="2" x:Name="WorkshopsFormatBadge" Background="{StaticResource LegendPillBgBrush}" CornerRadius="8" Padding="8,2" HorizontalAlignment="Center">
+                            <TextBlock x:Name="WorkshopsFormatText" Text="PDF" FontSize="10" Foreground="{StaticResource TextGreyBrush}"/>
+                        </Border>
+                        <!-- Checkmark Badge (hidden by default) -->
+                        <Border Grid.Row="3" x:Name="WorkshopsCheckBadge" IsVisible="False" Background="{StaticResource SuccessGreenBrush}" CornerRadius="10" Width="20" Height="20" HorizontalAlignment="Center" Margin="0,6,0,0">
+                            <PathIcon Width="12" Height="12" Foreground="White" Data="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- People Export Button -->
+                <Border x:Name="PeopleBtn" Grid.Column="2" Classes="export-btn"
+                        BorderBrush="{StaticResource Teal500Brush}"
+                        BorderThickness="1.5"
+                        CornerRadius="10"
+                        Background="White"
+                        Padding="12,16"
+                        Cursor="Hand"
+                        PointerPressed="PeopleBtn_Click">
+                    <Grid RowDefinitions="Auto,Auto,Auto,Auto">
+                        <!-- People Icon -->
+                        <PathIcon Grid.Row="0" Width="28" Height="28" Foreground="{StaticResource Teal500Brush}" HorizontalAlignment="Center"
+                                  Data="M16 11C17.66 11 18.99 9.66 18.99 8C18.99 6.34 17.66 5 16 5C14.34 5 13 6.34 13 8C13 9.66 14.34 11 16 11ZM8 11C9.66 11 10.99 9.66 10.99 8C10.99 6.34 9.66 5 8 5C6.34 5 5 6.34 5 8C5 9.66 6.34 11 8 11ZM8 13C5.67 13 1 14.17 1 16.5V19H15V16.5C15 14.17 10.33 13 8 13ZM16 13C15.71 13 15.38 13.02 15.03 13.05C16.19 13.89 17 15.02 17 16.5V19H23V16.5C23 14.17 18.33 13 16 13Z"/>
+                        <TextBlock Grid.Row="1" Text="{Binding ViewModel[export.peopleButton]}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource HeaderBlueBrush}" HorizontalAlignment="Center" Margin="0,8,0,4"/>
+                        <!-- Format Badge -->
+                        <Border Grid.Row="2" x:Name="PeopleFormatBadge" Background="{StaticResource LegendPillBgBrush}" CornerRadius="8" Padding="8,2" HorizontalAlignment="Center">
+                            <TextBlock x:Name="PeopleFormatText" Text="PDF" FontSize="10" Foreground="{StaticResource TextGreyBrush}"/>
+                        </Border>
+                        <!-- Checkmark Badge (hidden by default) -->
+                        <Border Grid.Row="3" x:Name="PeopleCheckBadge" IsVisible="False" Background="{StaticResource SuccessGreenBrush}" CornerRadius="10" Width="20" Height="20" HorizontalAlignment="Center" Margin="0,6,0,0">
+                            <PathIcon Width="12" Height="12" Foreground="White" Data="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Status text -->
+            <TextBlock x:Name="ExportStatusText"
+                       Text=""
+                       Foreground="{StaticResource TextGreyBrush}"
+                       FontSize="12"
+                       HorizontalAlignment="Center"
+                       IsVisible="False"/>
+        </StackPanel>
+    </Border>
+</UserControl>

@@ -1,0 +1,195 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:WorkshopAssignment.Converters"
+             x:Class="WorkshopAssignment.App"
+             RequestedThemeVariant="Light">
+    <!-- RequestedThemeVariant: Default, Dark, Light -->
+    
+    <Application.Styles>
+        <FluentTheme />
+
+        <!-- Minimal thin scrollbar styling -->
+        <!-- Vertical scrollbar: thin overlay, slightly wider on hover -->
+        <Style Selector="ScrollBar:vertical">
+            <Setter Property="Width" Value="6"/>
+            <Setter Property="MinWidth" Value="6"/>
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="ScrollBar:vertical:pointerover">
+            <Setter Property="Width" Value="8"/>
+            <Setter Property="MinWidth" Value="8"/>
+        </Style>
+        <!-- Vertical thumb: semi-transparent, rounded -->
+        <Style Selector="ScrollBar:vertical /template/ Thumb">
+            <Setter Property="Background" Value="#50000000"/>
+            <Setter Property="MinHeight" Value="30"/>
+            <Setter Property="Width" Value="6"/>
+            <Setter Property="CornerRadius" Value="3"/>
+        </Style>
+        <Style Selector="ScrollBar:vertical:pointerover /template/ Thumb">
+            <Setter Property="Background" Value="#70000000"/>
+            <Setter Property="Width" Value="8"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+
+        <!-- Horizontal scrollbar: thin overlay -->
+        <Style Selector="ScrollBar:horizontal">
+            <Setter Property="Height" Value="6"/>
+            <Setter Property="MinHeight" Value="6"/>
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="ScrollBar:horizontal:pointerover">
+            <Setter Property="Height" Value="8"/>
+            <Setter Property="MinHeight" Value="8"/>
+        </Style>
+        <!-- Horizontal thumb: semi-transparent, rounded -->
+        <Style Selector="ScrollBar:horizontal /template/ Thumb">
+            <Setter Property="Background" Value="#50000000"/>
+            <Setter Property="MinWidth" Value="30"/>
+            <Setter Property="Height" Value="6"/>
+            <Setter Property="CornerRadius" Value="3"/>
+        </Style>
+        <Style Selector="ScrollBar:horizontal:pointerover /template/ Thumb">
+            <Setter Property="Background" Value="#70000000"/>
+            <Setter Property="Height" Value="8"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+    </Application.Styles>
+    
+    <Application.Resources>
+        <ResourceDictionary>
+            <!-- Converters -->
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+            <converters:BoolToInverseVisibilityConverter x:Key="BoolToInverseVisibility"/>
+            <converters:BoolToProgressBarBrushConverter x:Key="BoolToProgressBarBrush"/>
+            <converters:BoolToActiveSegmentForegroundConverter x:Key="BoolToActiveSegmentForeground"/>
+            <converters:WorkshopTypeToChipBackgroundConverter x:Key="WorkshopTypeToChipBackground"/>
+            <converters:WorkshopTypeToChipBorderConverter x:Key="WorkshopTypeToChipBorder"/>
+            <converters:WorkshopTypeToBadgeBackgroundConverter x:Key="WorkshopTypeToBadgeBackground"/>
+            <converters:WorkshopTypeToBadgeForegroundConverter x:Key="WorkshopTypeToBadgeForeground"/>
+
+            <!-- ============================================== -->
+            <!-- CENTRALIZED COLOR PALETTE                     -->
+            <!-- Single source of truth for all widget colors  -->
+            <!-- ============================================== -->
+
+            <!-- Primary Accent (Teal) -->
+            <Color x:Key="Teal500">#55acbf</Color>
+            <Color x:Key="Teal400">#7BC4D4</Color>
+            <Color x:Key="Teal600">#3D8A9A</Color>
+
+            <!-- Backgrounds -->
+            <Color x:Key="HeaderBlue">#02385a</Color>
+            <Color x:Key="DarkNavy">#021c3f</Color>
+            <Color x:Key="CardBackground">#E6FFFFFF</Color>
+            <Color x:Key="CardBackgroundSolid">#FFFFFF</Color>
+
+            <!-- Text Colors -->
+            <Color x:Key="TextDark">#1a1a2e</Color>
+            <Color x:Key="TextGrey">#555555</Color>
+            <Color x:Key="TextMuted">#6b7280</Color>
+            <Color x:Key="TextInputGrey">#222222</Color>
+            <Color x:Key="TextShadow">#30000000</Color>
+
+            <!-- UI Elements -->
+            <Color x:Key="DisabledGrey">#888888</Color>
+            <Color x:Key="BorderColor">#b0b0b0</Color>
+            <Color x:Key="BorderLight">#CCCCCC</Color>
+            <Color x:Key="DividerColor">#e0e0e0</Color>
+            <Color x:Key="ButtonSecondaryBg">#374151</Color>
+            <Color x:Key="DisabledForeground">#CCCCCC</Color>
+
+            <!-- TextControl Colors -->
+            <Color x:Key="TextControlBg">#F5F5F5</Color>
+            <Color x:Key="TextControlBgHover">#EBEBEB</Color>
+            <Color x:Key="TextControlBgFocused">#FFFFFF</Color>
+            <Color x:Key="ButtonBgHover">#F0F0F0</Color>
+            <Color x:Key="ButtonBgPressed">#E0E0E0</Color>
+
+            <!-- Chart Colors -->
+            <Color x:Key="ChartBar1">#02385a</Color>
+            <Color x:Key="ChartBar2">#4196a8</Color>
+            <Color x:Key="ChartBar3">#8ec6d5</Color>
+            <Color x:Key="ChartGridLine">#e8e8e8</Color>
+            <Color x:Key="ChartTrackBg">#D8D8D8</Color>
+            <Color x:Key="ChartInsetShadow">#A0A0A0</Color>
+            <Color x:Key="ChartInsetHighlight">#F0F0F0</Color>
+            <Color x:Key="ProgressTrackDark">#B8B8B8</Color>
+            <Color x:Key="ProgressTrackMid">#D0D0D0</Color>
+            <Color x:Key="ProgressFillDark">#3A8A9E</Color>
+            <Color x:Key="ProgressFillLight">#6EC3D2</Color>
+            <Color x:Key="CancelledBg">#F8F8F8</Color>
+            
+            <!-- Stacked Bar Gradient Colors — 6-rank teal gradient (darkest=rank1, lightest=rank6) + grey unassigned -->
+            <Color x:Key="Wish1GradientStart">#045a8d</Color>
+            <Color x:Key="Wish1GradientEnd">#02385a</Color>
+            <Color x:Key="Wish2GradientStart">#2a7d96</Color>
+            <Color x:Key="Wish2GradientEnd">#1a6b7f</Color>
+            <Color x:Key="Wish3GradientStart">#55acbf</Color>
+            <Color x:Key="Wish3GradientEnd">#4196a8</Color>
+            <Color x:Key="Wish4GradientStart">#7bc4d4</Color>
+            <Color x:Key="Wish4GradientEnd">#69b5c4</Color>
+            <Color x:Key="Wish5GradientStart">#a0d3e0</Color>
+            <Color x:Key="Wish5GradientEnd">#8ec6d5</Color>
+            <Color x:Key="Wish6GradientStart">#c5e5ed</Color>
+            <Color x:Key="Wish6GradientEnd">#b5dce5</Color>
+            <Color x:Key="UnassignedGradientStart">#e5e8eb</Color>
+            <Color x:Key="UnassignedGradientEnd">#d1d5db</Color>
+            
+            <!-- Export Widget Colors -->
+            <Color x:Key="LegendPillBg">#f5f7f9</Color>
+            <Color x:Key="ToggleContainerStart">#f7f9fb</Color>
+            <Color x:Key="ToggleContainerEnd">#f0f4f8</Color>
+            <Color x:Key="SuccessGreen">#22c55e</Color>
+            <Color x:Key="SuccessGreenDark">#16a34a</Color>
+
+            <!-- ============================================== -->
+            <!-- SOLIDCOLORBRUSH RESOURCES                     -->
+            <!-- Use these in XAML with StaticResource          -->
+            <!-- ============================================== -->
+
+            <!-- Primary Accent Brushes -->
+            <SolidColorBrush x:Key="Teal500Brush" Color="{StaticResource Teal500}"/>
+            <SolidColorBrush x:Key="Teal400Brush" Color="{StaticResource Teal400}"/>
+            <SolidColorBrush x:Key="Teal600Brush" Color="{StaticResource Teal600}"/>
+            <!-- Aliases for widget compatibility -->
+            <SolidColorBrush x:Key="TealBrush" Color="{StaticResource Teal500}"/>
+            <SolidColorBrush x:Key="TealLightBrush" Color="{StaticResource Teal400}"/>
+            <SolidColorBrush x:Key="TealDarkBrush" Color="{StaticResource Teal600}"/>
+
+            <!-- Background Brushes -->
+            <SolidColorBrush x:Key="HeaderBlueBrush" Color="{StaticResource HeaderBlue}"/>
+            <SolidColorBrush x:Key="DarkNavyBrush" Color="{StaticResource DarkNavy}"/>
+            <SolidColorBrush x:Key="CardBackgroundBrush" Color="{StaticResource CardBackground}"/>
+
+            <!-- Text Brushes -->
+            <SolidColorBrush x:Key="TextDarkBrush" Color="{StaticResource TextDark}"/>
+            <SolidColorBrush x:Key="TextGreyBrush" Color="{StaticResource TextGrey}"/>
+            <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource TextMuted}"/>
+            <SolidColorBrush x:Key="TextInputGreyBrush" Color="{StaticResource TextInputGrey}"/>
+            <SolidColorBrush x:Key="TextShadowBrush" Color="{StaticResource TextShadow}"/>
+
+            <!-- UI Element Brushes -->
+            <SolidColorBrush x:Key="DisabledBrush" Color="{StaticResource DisabledGrey}"/>
+            <SolidColorBrush x:Key="DisabledGreyBrush" Color="{StaticResource DisabledGrey}"/>
+            <SolidColorBrush x:Key="BorderColorBrush" Color="{StaticResource BorderColor}"/>
+            <SolidColorBrush x:Key="BorderLightBrush" Color="{StaticResource BorderLight}"/>
+            <SolidColorBrush x:Key="DividerBrush" Color="{StaticResource DividerColor}"/>
+            <SolidColorBrush x:Key="DisabledForegroundBrush" Color="{StaticResource DisabledForeground}"/>
+
+            <!-- Chart Brushes -->
+            <SolidColorBrush x:Key="ChartBar1Brush" Color="{StaticResource ChartBar1}"/>
+            <SolidColorBrush x:Key="ChartBar2Brush" Color="{StaticResource ChartBar2}"/>
+            <SolidColorBrush x:Key="ChartBar3Brush" Color="{StaticResource ChartBar3}"/>
+            <SolidColorBrush x:Key="ChartGridLineBrush" Color="{StaticResource ChartGridLine}"/>
+            <SolidColorBrush x:Key="CancelledBgBrush" Color="{StaticResource CancelledBg}"/>
+            
+            <!-- Legend/Pill Brushes -->
+            <SolidColorBrush x:Key="LegendPillBgBrush" Color="{StaticResource LegendPillBg}"/>
+            <SolidColorBrush x:Key="SuccessGreenBrush" Color="{StaticResource SuccessGreen}"/>
+            <SolidColorBrush x:Key="SuccessGreenDarkBrush" Color="{StaticResource SuccessGreenDark}"/>
+
+            <SolidColorBrush x:Key="WhiteBrush" Color="White" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

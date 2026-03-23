@@ -1,0 +1,122 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="WorkshopAssignment.Views.Controls.ProgressBarWidget"
+             x:Name="Root">
+
+    <UserControl.Styles>
+        <!-- Step container base style -->
+        <Style Selector="Border.step-container">
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="CornerRadius" Value="26"/>
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        
+        <!-- Step number badge base style -->
+        <Style Selector="Border.step-badge">
+            <Setter Property="Width" Value="22"/>
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="CornerRadius" Value="11"/>
+            <Setter Property="Background" Value="#CCCCCC"/>
+        </Style>
+        
+        <!-- Step label base style -->
+        <Style Selector="TextBlock.step-label">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="#6b7280"/>
+        </Style>
+        
+        <!-- Badge number text style -->
+        <Style Selector="TextBlock.badge-number">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        
+        <!-- Checkmark style for done steps -->
+        <Style Selector="TextBlock.checkmark">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+    </UserControl.Styles>
+
+    <!-- Main pill container -->
+    <Border Background="#f1f5f9" CornerRadius="30" Padding="4" ClipToBounds="True">
+        <Grid>
+            <!-- Progress fill - positioned absolute, width bound to ProgressPercentage -->
+            <Border x:Name="ProgressFill"
+                    HorizontalAlignment="Left"
+                    CornerRadius="26"
+                    ClipToBounds="True">
+                <Border.Background>
+                    <SolidColorBrush Color="#4086efac"/>
+                </Border.Background>
+            </Border>
+            
+            <!-- Steps container - on top of fill -->
+            <StackPanel Orientation="Horizontal" 
+                        HorizontalAlignment="Center"
+                        Spacing="8">
+                
+                <!-- Step 1: Import -->
+                <Border x:Name="Step1Container" Classes="step-container">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Border x:Name="Step1Badge" Classes="step-badge">
+                            <Panel>
+                                <TextBlock x:Name="Step1Number" Text="1" Classes="badge-number"/>
+                                <TextBlock x:Name="Step1Check" Text="&#x2713;" Classes="checkmark" IsVisible="False"/>
+                            </Panel>
+                        </Border>
+                        <TextBlock x:Name="Step1Label" Text="{Binding ViewModel[progress.step1Label]}" Classes="step-label"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Step 2: Settings -->
+                <Border x:Name="Step2Container" Classes="step-container">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Border x:Name="Step2Badge" Classes="step-badge">
+                            <Panel>
+                                <TextBlock x:Name="Step2Number" Text="2" Classes="badge-number"/>
+                                <TextBlock x:Name="Step2Check" Text="&#x2713;" Classes="checkmark" IsVisible="False"/>
+                            </Panel>
+                        </Border>
+                        <TextBlock x:Name="Step2Label" Text="{Binding ViewModel[progress.step2Label]}" Classes="step-label"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Step 3: Run -->
+                <Border x:Name="Step3Container" Classes="step-container">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Border x:Name="Step3Badge" Classes="step-badge">
+                            <Panel>
+                                <TextBlock x:Name="Step3Number" Text="3" Classes="badge-number"/>
+                                <TextBlock x:Name="Step3Check" Text="&#x2713;" Classes="checkmark" IsVisible="False"/>
+                            </Panel>
+                        </Border>
+                        <TextBlock x:Name="Step3Label" Text="{Binding ViewModel[progress.step3Label]}" Classes="step-label"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Step 4: Export -->
+                <Border x:Name="Step4Container" Classes="step-container">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Border x:Name="Step4Badge" Classes="step-badge">
+                            <Panel>
+                                <TextBlock x:Name="Step4Number" Text="4" Classes="badge-number"/>
+                                <TextBlock x:Name="Step4Check" Text="&#x2713;" Classes="checkmark" IsVisible="False"/>
+                            </Panel>
+                        </Border>
+                        <TextBlock x:Name="Step4Label" Text="{Binding ViewModel[progress.step4Label]}" Classes="step-label"/>
+                    </StackPanel>
+                </Border>
+                
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

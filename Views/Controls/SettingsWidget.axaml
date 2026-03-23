@@ -1,0 +1,257 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="WorkshopAssignment.Views.Controls.SettingsWidget">
+
+    <UserControl.Styles>
+        <!-- Base slot TextBox style -->
+        <Style Selector="TextBox.slot-input">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#1a1a2e"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="12,14"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="IBeam"/>
+            <Setter Property="CaretBrush" Value="#1a1a2e"/>
+            <Setter Property="SelectionBrush" Value="#40000000"/>
+        </Style>
+
+        <!-- Slot 1: Teal600 gradient (darkest) -->
+        <Style Selector="TextBox.slot-input.slot1">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Color="#3D8A9A" Offset="0"/>
+                        <GradientStop Color="#2D6A76" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style Selector="TextBox.slot-input.slot1:pointerover">
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="#60FFFFFF"/>
+        </Style>
+        <Style Selector="TextBox.slot-input.slot1:focus">
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="#80FFFFFF"/>
+
+        </Style>
+
+        <!-- Slot 2: Teal500 (medium) -->
+        <Style Selector="TextBox.slot-input.slot2">
+            <Setter Property="Background" Value="#55acbf"/>
+        </Style>
+        <Style Selector="TextBox.slot-input.slot2:pointerover">
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="#60FFFFFF"/>
+        </Style>
+        <Style Selector="TextBox.slot-input.slot2:focus">
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="#80FFFFFF"/>
+
+        </Style>
+
+        <!-- Slot 3: ChartBar3 (lightest) -->
+        <Style Selector="TextBox.slot-input.slot3">
+            <Setter Property="Background" Value="#8ec6d5"/>
+        </Style>
+        <Style Selector="TextBox.slot-input.slot3:pointerover">
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="#60FFFFFF"/>
+        </Style>
+        <Style Selector="TextBox.slot-input.slot3:focus">
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="#80FFFFFF"/>
+
+        </Style>
+
+        <!-- Action button: Pill style matching runtime preset buttons -->
+        <Style Selector="Button.action-primary">
+            <Setter Property="Background" Value="{StaticResource Teal500Brush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Teal500Brush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Padding" Value="24,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                    <BrushTransition Property="Foreground" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.action-primary:pointerover">
+            <Setter Property="Background" Value="#5ABCD0"/>
+            <Setter Property="BorderBrush" Value="#5ABCD0"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="Button.action-primary:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#5ABCD0"/>
+        </Style>
+        <Style Selector="Button.action-primary:pressed">
+            <Setter Property="Background" Value="{StaticResource TealDarkBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource TealDarkBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+
+        <!-- Action button: Dashed outline, transparent -->
+        <Style Selector="Button.action-dashed">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+            <Setter Property="BorderBrush" Value="#9ca3af"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Padding" Value="24,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                    <BrushTransition Property="Foreground" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.action-dashed:pointerover">
+            <Setter Property="BorderBrush" Value="{StaticResource Teal500Brush}"/>
+            <Setter Property="Foreground" Value="{StaticResource Teal500Brush}"/>
+        </Style>
+        <Style Selector="Button.action-dashed:pressed">
+            <Setter Property="BorderBrush" Value="{StaticResource TealDarkBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TealDarkBrush}"/>
+        </Style>
+
+        <!-- Tick mark label style -->
+        <Style Selector="TextBlock.tick-label">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Border Background="#E6FFFFFF" BorderBrush="#b0b0b0" BorderThickness="1" CornerRadius="6" Padding="16,12"
+            BoxShadow="0 4 12 0 #30000000">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="12">
+                <!-- Header with Language Toggle -->
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="{Binding ViewModel[settings.pageTitle]}" FontSize="20" FontWeight="Bold" Foreground="#1a1a2e"
+                               VerticalAlignment="Center"/>
+
+                    <!-- Language Toggle: Sliding pill segmented control (matches ExportWidget format toggle) -->
+                    <Border Grid.Column="1" CornerRadius="25" Padding="4"
+                            VerticalAlignment="Center" HorizontalAlignment="Right">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                <GradientStop Color="{StaticResource ToggleContainerStart}" Offset="0"/>
+                                <GradientStop Color="{StaticResource ToggleContainerEnd}" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Grid>
+                            <!-- Sliding active pill -->
+                            <Border x:Name="LangActivePill"
+                                    Width="72"
+                                    Height="32"
+                                    CornerRadius="16"
+                                    HorizontalAlignment="Left">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                        <GradientStop Color="{StaticResource Teal600}" Offset="0"/>
+                                        <GradientStop Color="{StaticResource Teal500}" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                                <Border.RenderTransform>
+                                    <TranslateTransform X="0"/>
+                                </Border.RenderTransform>
+                            </Border>
+
+                            <!-- Toggle options -->
+                            <StackPanel Orientation="Horizontal">
+                                <!-- EN Option -->
+                                <Border x:Name="LangEnOption" Width="72" Height="32" Background="Transparent" Cursor="Hand"
+                                        PointerPressed="LangEn_Click">
+                                    <TextBlock x:Name="LangEnText" Text="EN" FontSize="12" FontWeight="SemiBold" Foreground="White"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+
+                                <!-- DE Option -->
+                                <Border x:Name="LangDeOption" Width="72" Height="32" Background="Transparent" Cursor="Hand"
+                                        PointerPressed="LangDe_Click">
+                                    <TextBlock x:Name="LangDeText" Text="DE" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextGreyBrush}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- Editable Diagram Container -->
+                <Border Background="#F8FAFB" CornerRadius="8" Padding="16,12" Margin="0,4,0,0"
+                        BorderBrush="#e5e7eb" BorderThickness="1">
+                    <StackPanel Spacing="12">
+                        <!-- Hint Text -->
+                        <TextBlock Text="{Binding ViewModel[settings.hintClickToRename]}"
+                                   FontStyle="Italic"
+                                   FontSize="12"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,4"/>
+
+                        <!-- Slots 2 and 3: Side by Side -->
+                        <Grid ColumnDefinitions="*,12,*">
+                            <!-- Slot 2 (Early Block) — two-way bound to ViewModel.Slot2Name -->
+                            <TextBox x:Name="Slot2Input"
+                                     Grid.Column="0"
+                                     Classes="slot-input slot2"
+                                     Text="{Binding ViewModel.Slot2Name, Mode=TwoWay}"
+                                     Watermark="{Binding ViewModel[settings.slot2Default]}"
+                                     Height="48"/>
+
+                            <!-- Slot 3 (Late Block) — two-way bound to ViewModel.Slot3Name -->
+                            <TextBox x:Name="Slot3Input"
+                                     Grid.Column="2"
+                                     Classes="slot-input slot3"
+                                     Text="{Binding ViewModel.Slot3Name, Mode=TwoWay}"
+                                     Watermark="{Binding ViewModel[settings.slot3Default]}"
+                                     Height="48"/>
+                        </Grid>
+
+                        <!-- Slot 1: Full Width (Morning Session) — two-way bound to ViewModel.Slot1Name -->
+                        <TextBox x:Name="Slot1Input"
+                                 Classes="slot-input slot1"
+                                 Text="{Binding ViewModel.Slot1Name, Mode=TwoWay}"
+                                 Watermark="{Binding ViewModel[settings.slot1Default]}"
+                                 Height="48"/>
+
+                        <!-- Tick Marks Row -->
+                        <Grid ColumnDefinitions="Auto,*,Auto,*,Auto" Margin="4,4,4,0">
+                            <TextBlock Grid.Column="0" Text="{Binding ViewModel[settings.tickStart]}" Classes="tick-label"/>
+                            <TextBlock Grid.Column="2" Text="{Binding ViewModel[settings.tickMid]}" Classes="tick-label" HorizontalAlignment="Center"/>
+                            <TextBlock Grid.Column="4" Text="{Binding ViewModel[settings.tickEnd]}" Classes="tick-label"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Action Buttons Row -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8" Margin="0,8,0,0">
+                    <Button x:Name="ApplyBtn"
+                            Content="{Binding ViewModel[common.apply]}"
+                            Click="Apply_Click"
+                            Classes="action-primary"/>
+
+                    <Button x:Name="AutoLoadDummyDataBtn"
+                            Content="{Binding ViewModel[settings.devData]}"
+                            Click="AutoLoadDummyData_Click"
+                            Classes="action-dashed"/>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
+</UserControl>

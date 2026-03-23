@@ -1,0 +1,275 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="WorkshopAssignment.Views.Controls.ImportWidget">
+
+    <UserControl.Styles>
+        <!-- Section label style -->
+        <Style Selector="TextBlock.section-label">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#555555"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+
+        <!-- Drop zone base style (empty state) -->
+        <Style Selector="Border.drop-zone">
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="#CCCCCC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Border.drop-zone:pointerover">
+            <Setter Property="BorderBrush" Value="#55acbf"/>
+            <Setter Property="Background" Value="#1055acbf"/>
+        </Style>
+
+        <!-- Drop zone text -->
+        <Style Selector="TextBlock.drop-zone-text">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#888888"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- File item row -->
+        <Style Selector="Border.file-item">
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="8,0"/>
+        </Style>
+        <Style Selector="Border.file-item.error">
+            <Setter Property="Background" Value="#fee2e2"/>
+        </Style>
+
+        <!-- Status dot (success/error) -->
+        <Style Selector="Ellipse.status-dot">
+            <Setter Property="Width" Value="8"/>
+            <Setter Property="Height" Value="8"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Ellipse.status-dot.success">
+            <Setter Property="Fill" Value="#22c55e"/>
+        </Style>
+        <Style Selector="Ellipse.status-dot.error">
+            <Setter Property="Fill" Value="#ef4444"/>
+        </Style>
+
+        <!-- Spinner arc for loading state -->
+        <Style Selector="Border.spinner-container">
+            <Setter Property="Width" Value="8"/>
+            <Setter Property="Height" Value="8"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Arc.spinner">
+            <Setter Property="Width" Value="8"/>
+            <Setter Property="Height" Value="8"/>
+            <Setter Property="StrokeThickness" Value="1.5"/>
+            <Setter Property="Stroke" Value="#55acbf"/>
+            <Setter Property="StartAngle" Value="0"/>
+            <Setter Property="SweepAngle" Value="270"/>
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+        </Style>
+
+        <!-- Ripple effect (animated on completion) -->
+        <Style Selector="Ellipse.ripple">
+            <Setter Property="Width" Value="8"/>
+            <Setter Property="Height" Value="8"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Opacity" Value="0"/>
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="RenderTransform">
+                <ScaleTransform ScaleX="1" ScaleY="1"/>
+            </Setter>
+        </Style>
+        <Style Selector="Ellipse.ripple.success">
+            <Setter Property="Fill" Value="#22c55e"/>
+        </Style>
+        <Style Selector="Ellipse.ripple.error">
+            <Setter Property="Fill" Value="#ef4444"/>
+        </Style>
+
+        <!-- File name text -->
+        <Style Selector="TextBlock.file-name">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#1a1a2e"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            <Setter Property="Margin" Value="8,0"/>
+        </Style>
+        <Style Selector="TextBlock.file-name.loading">
+            <Setter Property="Foreground" Value="#6b7280"/>
+        </Style>
+
+        <!-- Warning button -->
+        <Style Selector="Button.warning-btn">
+            <Setter Property="Background" Value="#26F59E0B"/>
+            <Setter Property="Foreground" Value="#b45309"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Padding" Value="8,2"/>
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="MinHeight" Value="20"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.warning-btn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#40F59E0B"/>
+        </Style>
+
+        <!-- Delete button -->
+        <Style Selector="Button.delete-btn">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#999999"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="4,0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="MinWidth" Value="24"/>
+            <Setter Property="MinHeight" Value="24"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Opacity" Value="0"/>
+        </Style>
+        <Style Selector="Border.file-item:pointerover Button.delete-btn">
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+        <Style Selector="Button.delete-btn:pointerover /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="#ef4444"/>
+        </Style>
+
+        <!-- Add more button -->
+        <Style Selector="Border.add-more-btn">
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Border.add-more-btn:pointerover">
+            <Setter Property="Background" Value="#1055acbf"/>
+        </Style>
+        <Style Selector="Border.add-more-btn TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#6b7280"/>
+        </Style>
+        <Style Selector="Border.add-more-btn:pointerover TextBlock">
+            <Setter Property="Foreground" Value="#55acbf"/>
+        </Style>
+
+        <!-- Dashed outline pill button (action-dashed) -->
+        <Style Selector="Button.action-dashed">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+            <Setter Property="BorderBrush" Value="#9ca3af"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Padding" Value="16,6"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                    <BrushTransition Property="Foreground" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.action-dashed:pointerover">
+            <Setter Property="BorderBrush" Value="{StaticResource Teal500Brush}"/>
+            <Setter Property="Foreground" Value="{StaticResource Teal500Brush}"/>
+        </Style>
+        <Style Selector="Button.action-dashed:pressed">
+            <Setter Property="BorderBrush" Value="{StaticResource TealDarkBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TealDarkBrush}"/>
+        </Style>
+    </UserControl.Styles>
+
+
+
+    <Border Background="#E6FFFFFF" BorderBrush="#b0b0b0" BorderThickness="1" CornerRadius="6" Padding="16,12"
+            BoxShadow="0 4 12 0 #30000000">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Spacing="12">
+                <!-- Title + Template Button -->
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="{Binding ViewModel[import.pageTitle]}" FontSize="20" FontWeight="Bold" Foreground="#1a1a2e"
+                               VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Content="{Binding ViewModel[import.getTemplate]}"
+                            Click="TemplateBtn_Click"
+                            Classes="action-dashed"
+                            VerticalAlignment="Center"/>
+                </Grid>
+
+                <!-- Workshops Section -->
+                <StackPanel Spacing="4">
+                    <TextBlock Text="{Binding ViewModel[import.workshopsSection]}" Classes="section-label"/>
+                    
+                    <!-- Workshop content area - shows either drop zone or file item -->
+                    <Panel x:Name="WorkshopPanel">
+                        <!-- Drop zone (visible when no file loaded) -->
+                        <Border x:Name="WorkshopDropZone"
+                                Classes="drop-zone"
+                                DragDrop.AllowDrop="True"
+                                PointerPressed="WorkshopDropZone_Click">
+                            <TextBlock Text="{Binding ViewModel[import.dropFileOrClick]}" Classes="drop-zone-text"/>
+                        </Border>
+                        
+                        <!-- File item (visible when file loaded) -->
+                        <Border x:Name="WorkshopFileItem" Classes="file-item" IsVisible="False">
+                            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                                <!-- Status indicator container -->
+                                <Panel Grid.Column="0" Width="16" Height="16" VerticalAlignment="Center">
+                                    <!-- Loading spinner -->
+                                    <Border x:Name="WorkshopSpinner" Classes="spinner-container" IsVisible="False">
+                                        <Arc x:Name="WorkshopSpinnerArc" Classes="spinner"/>
+                                    </Border>
+                                    <!-- Status dot -->
+                                    <Ellipse x:Name="WorkshopStatusDot" Classes="status-dot success"/>
+                                    <!-- Ripple effect -->
+                                    <Ellipse x:Name="WorkshopRipple" Classes="ripple success"/>
+                                </Panel>
+                                
+                                <!-- File name -->
+                                <TextBlock x:Name="WorkshopFileName" Grid.Column="1" Classes="file-name"/>
+                                
+                                <!-- Warning button (only visible for errors) -->
+                                <Button x:Name="WorkshopWarningBtn" Grid.Column="2" Classes="warning-btn" 
+                                        Content="{Binding ViewModel[import.warningButton]}" IsVisible="False" Margin="4,0"
+                                        Click="WorkshopWarningBtn_Click"/>
+                                
+                                <!-- Delete button (visible on hover) -->
+                                <Button x:Name="WorkshopDeleteBtn" Grid.Column="3" Classes="delete-btn" 
+                                        Content="&#xD7;" Click="WorkshopDeleteBtn_Click"/>
+                            </Grid>
+                        </Border>
+                    </Panel>
+                </StackPanel>
+
+                <!-- People Section -->
+                <StackPanel Spacing="4">
+                    <TextBlock Text="{Binding ViewModel[import.peopleSection]}" Classes="section-label"/>
+                    
+                    <!-- Person content area -->
+                    <StackPanel x:Name="PersonPanel" Spacing="2">
+                        <!-- Person files will be added here dynamically -->
+                        
+                        <!-- Drop zone (visible when no files loaded) -->
+                        <Border x:Name="PersonDropZone"
+                                Classes="drop-zone"
+                                DragDrop.AllowDrop="True"
+                                PointerPressed="PersonDropZone_Click">
+                            <TextBlock Text="{Binding ViewModel[import.dropFilesOrClick]}" Classes="drop-zone-text"/>
+                        </Border>
+                        
+                        <!-- Add more button (visible when files exist) -->
+                        <Border x:Name="AddMoreBtn" Classes="add-more-btn" IsVisible="False"
+                                PointerPressed="AddMoreBtn_Click">
+                            <TextBlock Text="{Binding ViewModel[import.addMoreFiles]}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
+</UserControl>

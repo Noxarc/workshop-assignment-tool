@@ -1,0 +1,84 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+    <RootNamespace>WorkshopAssignment</RootNamespace>
+    <AssemblyName>WorkshopAssignment</AssemblyName>
+    <StartupObject>WorkshopAssignment.Program</StartupObject>
+    <Version>0.2.0</Version>
+    <Authors>Melwin</Authors>
+    <Product>Workshop Assignment</Product>
+    <Description>A local tool to assign people to timeslots and workshops using constraint optimization.</Description>
+    <ApplicationIcon>assets\Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <!-- Avalonia UI Framework -->
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.2.2" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.2.2" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.2" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.2" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.2.2" />
+    
+    <!-- Avalonia diagnostics (debug only) -->
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.2.2" />
+  </ItemGroup>
+
+  <!-- MVVM and cross-platform packages -->
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+  </ItemGroup>
+
+  <!-- Business logic packages -->
+  <ItemGroup>
+    <PackageReference Include="Google.OrTools" Version="9.11.4210" />
+    <PackageReference Include="ClosedXML" Version="0.104.2" />
+    <PackageReference Include="QuestPDF" Version="2024.12.2" />
+  </ItemGroup>
+
+  <!-- Testing packages -->
+  <ItemGroup>
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+  </ItemGroup>
+
+  <!-- Avalonia XAML files - SDK handles .axaml automatically -->
+
+  <!-- Localization JSON files copied to output for filesystem-based loading -->
+  <ItemGroup>
+    <Content Include="Resources\Strings.*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- Sample data for dev auto-load -->
+  <ItemGroup>
+    <Content Include="assets\sample_data\*.xlsx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- Background image and app icon (Avalonia resource URI for Window.Icon binding) -->
+  <ItemGroup>
+    <AvaloniaResource Include="Resources\background.jpg" />
+    <AvaloniaResource Include="assets\Icon.ico" />
+  </ItemGroup>
+
+  <!-- App manifest for Windows -->
+  <ItemGroup>
+    <None Update="app.manifest">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

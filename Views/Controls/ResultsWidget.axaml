@@ -1,0 +1,171 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="WorkshopAssignment.Views.Controls.ResultsWidget">
+
+    <Border Background="#E6FFFFFF" BorderBrush="#b0b0b0" BorderThickness="1"
+            CornerRadius="6" Padding="16,12"
+            BoxShadow="0 4 12 0 #30000000">
+        <StackPanel Spacing="12">
+            <!-- Title -->
+            <TextBlock Text="{Binding ViewModel[results.pageTitle]}" FontSize="20" FontWeight="Bold" Foreground="#1a1a2e"/>
+
+            <!-- Stacked Bar Container with Teal Glow -->
+            <Border CornerRadius="20" 
+                    Height="40"
+                    BoxShadow="0 0 20 0 #4041A6A8, 0 0 40 0 #1941A6A8">
+                <Border CornerRadius="20" ClipToBounds="True">
+                    <!-- Horizontal segments container - 7 columns: 6 wish ranks + unassigned -->
+                    <Grid x:Name="StackedBarContainer">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="0"/>
+                            <ColumnDefinition Width="0"/>
+                            <ColumnDefinition Width="0"/>
+                            <ColumnDefinition Width="0"/>
+                            <ColumnDefinition Width="0"/>
+                            <ColumnDefinition Width="0"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <!-- Rank 1 Segment (darkest) -->
+                        <Border x:Name="Segment1" Grid.Column="0">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                    <GradientStop Color="{StaticResource Wish1GradientStart}" Offset="0"/>
+                                    <GradientStop Color="{StaticResource Wish1GradientEnd}" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        
+                        <!-- Rank 2 Segment -->
+                        <Border x:Name="Segment2" Grid.Column="1">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                    <GradientStop Color="{StaticResource Wish2GradientStart}" Offset="0"/>
+                                    <GradientStop Color="{StaticResource Wish2GradientEnd}" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        
+                        <!-- Rank 3 Segment -->
+                        <Border x:Name="Segment3" Grid.Column="2">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                    <GradientStop Color="{StaticResource Wish3GradientStart}" Offset="0"/>
+                                    <GradientStop Color="{StaticResource Wish3GradientEnd}" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        
+                        <!-- Rank 4 Segment -->
+                        <Border x:Name="Segment4" Grid.Column="3">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                    <GradientStop Color="{StaticResource Wish4GradientStart}" Offset="0"/>
+                                    <GradientStop Color="{StaticResource Wish4GradientEnd}" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        
+                        <!-- Rank 5 Segment -->
+                        <Border x:Name="Segment5" Grid.Column="4">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                    <GradientStop Color="{StaticResource Wish5GradientStart}" Offset="0"/>
+                                    <GradientStop Color="{StaticResource Wish5GradientEnd}" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        
+                        <!-- Rank 6 Segment (lightest) -->
+                        <Border x:Name="Segment6" Grid.Column="5">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                    <GradientStop Color="{StaticResource Wish6GradientStart}" Offset="0"/>
+                                    <GradientStop Color="{StaticResource Wish6GradientEnd}" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        
+                        <!-- Unassigned Segment (grey) -->
+                        <Border x:Name="Segment7" Grid.Column="6">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                    <GradientStop Color="{StaticResource UnassignedGradientStart}" Offset="0"/>
+                                    <GradientStop Color="{StaticResource UnassignedGradientEnd}" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Border>
+
+            <!-- Legend Row - Pill-shaped items for 6 ranks + unassigned -->
+            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Border Background="{StaticResource LegendPillBgBrush}" CornerRadius="16" Padding="10,4" Margin="4,2">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Ellipse Width="8" Height="8" Fill="{StaticResource Wish1GradientStart}"/>
+                        <TextBlock x:Name="Legend1Text" Text="1st: --" FontSize="10" Foreground="{StaticResource TextGreyBrush}"/>
+                    </StackPanel>
+                </Border>
+                <Border Background="{StaticResource LegendPillBgBrush}" CornerRadius="16" Padding="10,4" Margin="4,2">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Ellipse Width="8" Height="8" Fill="{StaticResource Wish2GradientStart}"/>
+                        <TextBlock x:Name="Legend2Text" Text="2nd: --" FontSize="10" Foreground="{StaticResource TextGreyBrush}"/>
+                    </StackPanel>
+                </Border>
+                <Border Background="{StaticResource LegendPillBgBrush}" CornerRadius="16" Padding="10,4" Margin="4,2">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Ellipse Width="8" Height="8" Fill="{StaticResource Wish3GradientStart}"/>
+                        <TextBlock x:Name="Legend3Text" Text="3rd: --" FontSize="10" Foreground="{StaticResource TextGreyBrush}"/>
+                    </StackPanel>
+                </Border>
+                <Border Background="{StaticResource LegendPillBgBrush}" CornerRadius="16" Padding="10,4" Margin="4,2">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Ellipse Width="8" Height="8" Fill="{StaticResource Wish4GradientStart}"/>
+                        <TextBlock x:Name="Legend4Text" Text="4th: --" FontSize="10" Foreground="{StaticResource TextGreyBrush}"/>
+                    </StackPanel>
+                </Border>
+                <Border Background="{StaticResource LegendPillBgBrush}" CornerRadius="16" Padding="10,4" Margin="4,2">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Ellipse Width="8" Height="8" Fill="{StaticResource Wish5GradientStart}"/>
+                        <TextBlock x:Name="Legend5Text" Text="5th: --" FontSize="10" Foreground="{StaticResource TextGreyBrush}"/>
+                    </StackPanel>
+                </Border>
+                <Border Background="{StaticResource LegendPillBgBrush}" CornerRadius="16" Padding="10,4" Margin="4,2">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Ellipse Width="8" Height="8" Fill="{StaticResource Wish6GradientStart}"/>
+                        <TextBlock x:Name="Legend6Text" Text="6th: --" FontSize="10" Foreground="{StaticResource TextGreyBrush}"/>
+                    </StackPanel>
+                </Border>
+                <Border Background="{StaticResource LegendPillBgBrush}" CornerRadius="16" Padding="10,4" Margin="4,2">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Ellipse Width="8" Height="8" Fill="{StaticResource UnassignedGradientStart}"/>
+                        <TextBlock x:Name="Legend7Text" Text="None: --" FontSize="10" Foreground="{StaticResource TextGreyBrush}"/>
+                    </StackPanel>
+                </Border>
+            </WrapPanel>
+
+            <!-- Summary Text -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+                <TextBlock x:Name="AssignedCountText" Text="--" FontSize="14" FontWeight="Bold" Foreground="{StaticResource HeaderBlueBrush}"/>
+                <TextBlock Text="{Binding ViewModel[results.summaryOf]}" FontSize="14" Foreground="{StaticResource TextGreyBrush}"/>
+                <TextBlock x:Name="TotalCountText" Text="--" FontSize="14" FontWeight="Bold" Foreground="{StaticResource HeaderBlueBrush}"/>
+                <TextBlock Text="{Binding ViewModel[results.summaryAssigned]}" FontSize="14" Foreground="{StaticResource TextGreyBrush}"/>
+            </StackPanel>
+
+            <!-- Divider -->
+            <Rectangle Height="1" Fill="{StaticResource DividerBrush}"/>
+
+            <!-- Cancelled Workshops Section -->
+            <TextBlock x:Name="CancelledHeader" Text="{Binding ViewModel[results.cancelledHeader]}" FontSize="14" FontWeight="Bold" Foreground="{StaticResource HeaderBlueBrush}"/>
+            
+            <!-- Cancelled Chips Container -->
+            <WrapPanel x:Name="CancelledChipsContainer" Orientation="Horizontal">
+                <!-- Placeholder chip shown when no cancelled workshops -->
+                <Border x:Name="NoCancelledPlaceholder" Background="{StaticResource LegendPillBgBrush}" CornerRadius="12" Padding="12,6" Margin="2">
+                    <TextBlock Text="{Binding ViewModel[results.cancelledNone]}" FontSize="11" Foreground="{StaticResource TextGreyBrush}"/>
+                </Border>
+            </WrapPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

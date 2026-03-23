@@ -1,0 +1,323 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="WorkshopAssignment.Views.Controls.RuntimeWidget">
+
+    <UserControl.Resources>
+        <!-- Teal gradient for run button -->
+        <LinearGradientBrush x:Key="TealGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="#7BC4D4" Offset="0"/>
+            <GradientStop Color="#55acbf" Offset="1"/>
+        </LinearGradientBrush>
+        
+        <!-- Deeper teal gradient for idle run button (more gradient depth) -->
+        <LinearGradientBrush x:Key="IdleTealGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="#92D5E5" Offset="0"/>
+            <GradientStop Color="#3D95A8" Offset="1"/>
+        </LinearGradientBrush>
+
+        <!-- Green gradient for done state -->
+        <LinearGradientBrush x:Key="GreenGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="#4ade80" Offset="0"/>
+            <GradientStop Color="#22c55e" Offset="1"/>
+        </LinearGradientBrush>
+        
+    </UserControl.Resources>
+
+
+    <UserControl.Styles>
+        <!-- Circular RUN button base style (110px) -->
+        <Style Selector="Button.run-button">
+            <Setter Property="Width" Value="110"/>
+            <Setter Property="Height" Value="110"/>
+            <Setter Property="CornerRadius" Value="55"/>
+            <Setter Property="Background" Value="{StaticResource IdleTealGradient}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="Button.run-button:pointerover">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Color="#8CD4E4" Offset="0"/>
+                        <GradientStop Color="#66BCCF" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style Selector="Button.run-button:pressed">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Color="#6AB4C4" Offset="0"/>
+                        <GradientStop Color="#459CAF" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style Selector="Button.run-button:disabled">
+            <Setter Property="Background" Value="#888888"/>
+            <Setter Property="Foreground" Value="#CCCCCC"/>
+        </Style>
+        
+        <!-- Running state: keep teal with faster pulse -->
+        <Style Selector="Button.run-button.running">
+            <Setter Property="Background" Value="{StaticResource TealGradient}"/>
+        </Style>
+        
+        <!-- Done state: green gradient -->
+        <Style Selector="Button.run-button.done">
+            <Setter Property="Background" Value="{StaticResource GreenGradient}"/>
+        </Style>
+        
+        <!-- Preset pill button base style -->
+        <Style Selector="Button.preset-pill">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderColorBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="MinWidth" Value="48"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                    <BrushTransition Property="Foreground" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <!-- Unselected hover — template-level to override Avalonia defaults -->
+        <Style Selector="Button.preset-pill:not(.selected):pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#10000000"/>
+        </Style>
+        <Style Selector="Button.preset-pill:not(.selected):pointerover">
+            <Setter Property="BorderBrush" Value="{StaticResource Teal500Brush}"/>
+        </Style>
+        <Style Selector="Button.preset-pill:disabled">
+            <Setter Property="Opacity" Value="0.5"/>
+            <Setter Property="Cursor" Value="Arrow"/>
+        </Style>
+
+        <!-- Selected preset pill -->
+        <Style Selector="Button.preset-pill.selected">
+            <Setter Property="Background" Value="{StaticResource Teal500Brush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Teal500Brush}"/>
+        </Style>
+        <Style Selector="Button.preset-pill.selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource Teal500Brush}"/>
+        </Style>
+        <!-- Selected hover — stays teal, slightly brighter -->
+        <Style Selector="Button.preset-pill.selected:pointerover">
+            <Setter Property="Background" Value="#5ABCD0"/>
+            <Setter Property="BorderBrush" Value="#5ABCD0"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="Button.preset-pill.selected:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#5ABCD0"/>
+        </Style>
+        
+        <!-- ============================================================ -->
+        <!-- COMET TRAIL ANIMATIONS — Ellipse (Soft Orbs)               -->
+        <!-- 8 positions, 0.25s staggered delay, Opacity fade over 2s   -->
+        <!-- ============================================================ -->
+        <Style Selector="Ellipse.cd0">
+            <Setter Property="Opacity" Value="0.05"/>
+            <Setter Property="IsHitTestVisible" Value="False"/>
+            <Style.Animations>
+                <Animation Duration="0:0:2" IterationCount="Infinite">
+                    <KeyFrame Cue="0%"><Setter Property="Opacity" Value="1.0"/></KeyFrame>
+                    <KeyFrame Cue="12%"><Setter Property="Opacity" Value="0.5"/></KeyFrame>
+                    <KeyFrame Cue="25%"><Setter Property="Opacity" Value="0.2"/></KeyFrame>
+                    <KeyFrame Cue="35%"><Setter Property="Opacity" Value="0.05"/></KeyFrame>
+                    <KeyFrame Cue="100%"><Setter Property="Opacity" Value="0.05"/></KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        <Style Selector="Ellipse.cd1">
+            <Setter Property="Opacity" Value="0.05"/>
+            <Setter Property="IsHitTestVisible" Value="False"/>
+            <Style.Animations>
+                <Animation Duration="0:0:2" Delay="0:0:0.25" IterationCount="Infinite">
+                    <KeyFrame Cue="0%"><Setter Property="Opacity" Value="1.0"/></KeyFrame>
+                    <KeyFrame Cue="12%"><Setter Property="Opacity" Value="0.5"/></KeyFrame>
+                    <KeyFrame Cue="25%"><Setter Property="Opacity" Value="0.2"/></KeyFrame>
+                    <KeyFrame Cue="35%"><Setter Property="Opacity" Value="0.05"/></KeyFrame>
+                    <KeyFrame Cue="100%"><Setter Property="Opacity" Value="0.05"/></KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        <Style Selector="Ellipse.cd2">
+            <Setter Property="Opacity" Value="0.05"/>
+            <Setter Property="IsHitTestVisible" Value="False"/>
+            <Style.Animations>
+                <Animation Duration="0:0:2" Delay="0:0:0.5" IterationCount="Infinite">
+                    <KeyFrame Cue="0%"><Setter Property="Opacity" Value="1.0"/></KeyFrame>
+                    <KeyFrame Cue="12%"><Setter Property="Opacity" Value="0.5"/></KeyFrame>
+                    <KeyFrame Cue="25%"><Setter Property="Opacity" Value="0.2"/></KeyFrame>
+                    <KeyFrame Cue="35%"><Setter Property="Opacity" Value="0.05"/></KeyFrame>
+                    <KeyFrame Cue="100%"><Setter Property="Opacity" Value="0.05"/></KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        <Style Selector="Ellipse.cd3">
+            <Setter Property="Opacity" Value="0.05"/>
+            <Setter Property="IsHitTestVisible" Value="False"/>
+            <Style.Animations>
+                <Animation Duration="0:0:2" Delay="0:0:0.75" IterationCount="Infinite">
+                    <KeyFrame Cue="0%"><Setter Property="Opacity" Value="1.0"/></KeyFrame>
+                    <KeyFrame Cue="12%"><Setter Property="Opacity" Value="0.5"/></KeyFrame>
+                    <KeyFrame Cue="25%"><Setter Property="Opacity" Value="0.2"/></KeyFrame>
+                    <KeyFrame Cue="35%"><Setter Property="Opacity" Value="0.05"/></KeyFrame>
+                    <KeyFrame Cue="100%"><Setter Property="Opacity" Value="0.05"/></KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        <Style Selector="Ellipse.cd4">
+            <Setter Property="Opacity" Value="0.05"/>
+            <Setter Property="IsHitTestVisible" Value="False"/>
+            <Style.Animations>
+                <Animation Duration="0:0:2" Delay="0:0:1" IterationCount="Infinite">
+                    <KeyFrame Cue="0%"><Setter Property="Opacity" Value="1.0"/></KeyFrame>
+                    <KeyFrame Cue="12%"><Setter Property="Opacity" Value="0.5"/></KeyFrame>
+                    <KeyFrame Cue="25%"><Setter Property="Opacity" Value="0.2"/></KeyFrame>
+                    <KeyFrame Cue="35%"><Setter Property="Opacity" Value="0.05"/></KeyFrame>
+                    <KeyFrame Cue="100%"><Setter Property="Opacity" Value="0.05"/></KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        <Style Selector="Ellipse.cd5">
+            <Setter Property="Opacity" Value="0.05"/>
+            <Setter Property="IsHitTestVisible" Value="False"/>
+            <Style.Animations>
+                <Animation Duration="0:0:2" Delay="0:0:1.25" IterationCount="Infinite">
+                    <KeyFrame Cue="0%"><Setter Property="Opacity" Value="1.0"/></KeyFrame>
+                    <KeyFrame Cue="12%"><Setter Property="Opacity" Value="0.5"/></KeyFrame>
+                    <KeyFrame Cue="25%"><Setter Property="Opacity" Value="0.2"/></KeyFrame>
+                    <KeyFrame Cue="35%"><Setter Property="Opacity" Value="0.05"/></KeyFrame>
+                    <KeyFrame Cue="100%"><Setter Property="Opacity" Value="0.05"/></KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        <Style Selector="Ellipse.cd6">
+            <Setter Property="Opacity" Value="0.05"/>
+            <Setter Property="IsHitTestVisible" Value="False"/>
+            <Style.Animations>
+                <Animation Duration="0:0:2" Delay="0:0:1.5" IterationCount="Infinite">
+                    <KeyFrame Cue="0%"><Setter Property="Opacity" Value="1.0"/></KeyFrame>
+                    <KeyFrame Cue="12%"><Setter Property="Opacity" Value="0.5"/></KeyFrame>
+                    <KeyFrame Cue="25%"><Setter Property="Opacity" Value="0.2"/></KeyFrame>
+                    <KeyFrame Cue="35%"><Setter Property="Opacity" Value="0.05"/></KeyFrame>
+                    <KeyFrame Cue="100%"><Setter Property="Opacity" Value="0.05"/></KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        <Style Selector="Ellipse.cd7">
+            <Setter Property="Opacity" Value="0.05"/>
+            <Setter Property="IsHitTestVisible" Value="False"/>
+            <Style.Animations>
+                <Animation Duration="0:0:2" Delay="0:0:1.75" IterationCount="Infinite">
+                    <KeyFrame Cue="0%"><Setter Property="Opacity" Value="1.0"/></KeyFrame>
+                    <KeyFrame Cue="12%"><Setter Property="Opacity" Value="0.5"/></KeyFrame>
+                    <KeyFrame Cue="25%"><Setter Property="Opacity" Value="0.2"/></KeyFrame>
+                    <KeyFrame Cue="35%"><Setter Property="Opacity" Value="0.05"/></KeyFrame>
+                    <KeyFrame Cue="100%"><Setter Property="Opacity" Value="0.05"/></KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+        <!-- Status text styles -->
+        <Style Selector="TextBlock.status-text">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="TextBlock.status-text.running">
+            <Setter Property="Foreground" Value="{StaticResource Teal500Brush}"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+        </Style>
+        <Style Selector="TextBlock.status-text.done">
+            <Setter Property="Foreground" Value="#22c55e"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+        </Style>
+    </UserControl.Styles>
+
+    <!-- Visual Content -->
+    <Border Background="#E6FFFFFF" BorderBrush="#b0b0b0" BorderThickness="1" CornerRadius="6" Padding="16,12"
+            BoxShadow="0 4 12 0 #30000000">
+    <Grid RowDefinitions="Auto,*,Auto,Auto">
+        <!-- Row 0: Title -->
+        <TextBlock Grid.Row="0" Text="{Binding ViewModel[runtime.title]}" FontSize="20" FontWeight="Bold" Foreground="#1a1a2e"/>
+
+        <!-- Row 1: Circular run button with progress ring and glow effect -->
+        <!-- Canvas sized to match arc geometry constants: CenterX=86, CenterY=86, Radius=83 => 172x172 -->
+        <Grid Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Width="172" Height="172">
+            <!-- Central run button -->
+            <Button x:Name="RunButton" Classes="run-button"
+                    Click="Run_Click"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid>
+                    <!-- Play triangle icon — visible in Idle state -->
+                    <Path x:Name="PlayIcon"
+                          Data="M 0,0 L 24,14 L 0,28 Z"
+                          Fill="White"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                          Margin="4,0,0,0"/>
+
+                    <!-- Elapsed time counter — visible in Running state -->
+                    <TextBlock x:Name="ElapsedTimeText"
+                               Text="0:00"
+                               IsVisible="False"
+                               Foreground="White"
+                               FontSize="20" FontWeight="Bold"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                    <!-- Checkmark icon — visible in Done state -->
+                    <Path x:Name="CheckmarkIcon"
+                          Data="M 4,14 L 12,22 L 28,6"
+                          Stroke="White" StrokeThickness="3" StrokeLineCap="Round"
+                          IsVisible="False"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Grid>
+            </Button>
+
+            <!-- Comet trail: 8 soft orbs orbiting the run button (visible only when running) -->
+            <Canvas x:Name="CometTrailCanvas" Width="160" Height="160"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    IsHitTestVisible="False" IsVisible="False">
+                <Ellipse Classes="cd0" Width="18" Height="18" Fill="#6055acbf" Canvas.Left="143" Canvas.Top="71"/>
+                <Ellipse Classes="cd1" Width="18" Height="18" Fill="#6055acbf" Canvas.Left="122" Canvas.Top="122"/>
+                <Ellipse Classes="cd2" Width="18" Height="18" Fill="#6055acbf" Canvas.Left="71"  Canvas.Top="143"/>
+                <Ellipse Classes="cd3" Width="18" Height="18" Fill="#6055acbf" Canvas.Left="20"  Canvas.Top="122"/>
+                <Ellipse Classes="cd4" Width="18" Height="18" Fill="#6055acbf" Canvas.Left="-1"  Canvas.Top="71"/>
+                <Ellipse Classes="cd5" Width="18" Height="18" Fill="#6055acbf" Canvas.Left="20"  Canvas.Top="20"/>
+                <Ellipse Classes="cd6" Width="18" Height="18" Fill="#6055acbf" Canvas.Left="71"  Canvas.Top="-1"/>
+                <Ellipse Classes="cd7" Width="18" Height="18" Fill="#6055acbf" Canvas.Left="122" Canvas.Top="20"/>
+            </Canvas>
+        </Grid>
+
+        <!-- Row 2: Section label for presets (below button) -->
+        <TextBlock x:Name="StatusText" Grid.Row="2" Text="{Binding ViewModel[runtime.selectRuntime]}" Classes="status-text"
+                   Margin="0,16,0,8"/>
+
+        <!-- Row 3: Preset time-limit pills (below label) -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8" Margin="0,0,0,0">
+            <Button x:Name="Preset30s" Classes="preset-pill" Tag="30" Click="Preset_Click" Content="30s"/>
+            <Button x:Name="Preset1m" Classes="preset-pill selected" Tag="60" Click="Preset_Click" Content="1m"/>
+            <Button x:Name="Preset5m" Classes="preset-pill" Tag="300" Click="Preset_Click" Content="5m"/>
+            <Button x:Name="Preset15m" Classes="preset-pill" Tag="900" Click="Preset_Click" Content="15m"/>
+            <Button x:Name="Preset60m" Classes="preset-pill" Tag="3600" Click="Preset_Click" Content="60m"/>
+        </StackPanel>
+    </Grid>
+    </Border>
+
+</UserControl>
