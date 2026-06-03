@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace WorkshopAssignment.Models;
 
@@ -79,15 +81,50 @@ public class WorkshopChip
 /// <summary>
 /// Mutable display model for the hero workshops expanded table.
 /// Workshop is an immutable record, so we need a mutable class for DataGrid editing.
+/// Implements INotifyPropertyChanged for the two editable numeric cells (Capacity/MinCapacity)
+/// ONLY: when UpdateWorkshopField resolves a cleared (null) cell or clamps a value, the in-place
+/// write must push back to the bound TextBox. There is no other refresh path — UpdateGroupedDisplays
+/// rebuilds the dashboard collections, not the HeroWorkshops collection the grid binds to. The other
+/// properties stay plain auto-properties because they are not edited-and-resolved server-side.
 /// </summary>
-public class HeroWorkshopDisplay
+public class HeroWorkshopDisplay : INotifyPropertyChanged
 {
     public string Id { get; set; } = "";
     public string Name { get; set; } = "";
     public WorkshopType Type { get; set; }
     public string TypeDisplay { get; set; } = "";
-    public int Capacity { get; set; }
-    public int MinCapacity { get; set; }
+    /// <summary>
+    /// Maximum workshop capacity (the "Max" cell in the hero workshop table).
+    /// Nullable so the TwoWay TextBox binding can represent an empty/cleared cell as null
+    /// instead of throwing "Could not convert \"\" to System.Int32" on a non-nullable int.
+    /// While editing, an empty cell is null; on commit (UpdateWorkshopField) null is resolved
+    /// by REVERTING to the workshop's previous stored capacity (clearing Max must NOT disable
+    /// the workshop). After commit the display is always synced back to a concrete int, so the
+    /// cell shows the resolved number, never empty. Underlying Workshop.Capacity stays int.
+    /// Notifying property (not auto): the synced-back resolved value must refresh the bound TextBox.
+    /// </summary>
+    public int? Capacity
+    {
+        get => _capacity;
+        set => SetField(ref _capacity, value);
+    }
+    private int? _capacity;
+
+    /// <summary>
+    /// Minimum workshop capacity (the "Min" cell in the hero workshop table).
+    /// Nullable for the same binding reason as Capacity: empty input is representable as null
+    /// rather than raising a DataValidationException that expands the validation adorner and
+    /// shifts the table. On commit (UpdateWorkshopField) an empty/null Min is resolved to 0
+    /// ("no minimum", the import default) and then clamped to not exceed the resolved capacity.
+    /// After commit the display is synced back to a concrete int. Underlying Workshop.MinCapacity stays int.
+    /// Notifying property (not auto): the synced-back resolved value must refresh the bound TextBox.
+    /// </summary>
+    public int? MinCapacity
+    {
+        get => _minCapacity;
+        set => SetField(ref _minCapacity, value);
+    }
+    private int? _minCapacity;
 
     /// <summary>
     /// Reference to the original Workshop record for propagating changes.
@@ -157,6 +194,25 @@ public class HeroWorkshopDisplay
     /// The source file this workshop was loaded from.
     /// </summary>
     public string? SourceFile { get; set; }
+
+    /// <summary>
+    /// Raised when a notifying property (Capacity/MinCapacity) changes, so the bound
+    /// hero-grid TextBox re-reads the value. Only the editable numeric cells use this.
+    /// </summary>
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    /// <summary>
+    /// Sets a backing field and raises PropertyChanged only when the value actually changed.
+    /// Returns true if the field was updated. The [CallerMemberName] supplies the property
+    /// name automatically so callers stay terse and rename-safe.
+    /// </summary>
+    private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        return true;
+    }
 }
 
 /// <summary>

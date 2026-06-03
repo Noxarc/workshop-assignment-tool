@@ -304,12 +304,29 @@ public partial class MainViewModel
         var index = Workshops.IndexOf(old);
         if (index < 0) return;
 
+        // Resolve nullable display values BEFORE validation. The hero "Min"/"Max" cells bind
+        // TwoWay to int? so a cleared cell arrives here as null (see HeroWorkshopDisplay).
+        // Capacity/MinCapacity follow the SAME empty-input rule: a cleared cell REVERTS to the
+        // workshop's PREVIOUS committed value, never collapses to 0.
+        //   - Max empty/null  -> REVERT to old.Capacity (last committed capacity).
+        //   - Min empty/null  -> REVERT to old.MinCapacity (last committed minimum).
+        // Clearing a cell must NOT silently zero the value (v0.3.0, Captain's explicit rule:
+        // empty input never forces 0 for either field). old is the immutable SourceWorkshop
+        // record still holding the last committed values, so it is the authoritative previous
+        // value. The subsequent validators leave an already-valid reverted value unchanged.
+        var resolvedCapacity = display.Capacity ?? old.Capacity;
+        var resolvedMinCapacity = display.MinCapacity ?? old.MinCapacity;
+
         // Validate and normalize capacity values per DATA_ALTERATION_SPEC
-        var validatedCapacity = _validator.ValidateCapacity(display.Capacity);
-        var validatedMinCapacity = _validator.ValidateMinCapacity(display.MinCapacity);
+        var validatedCapacity = _validator.ValidateCapacity(resolvedCapacity);
+        var validatedMinCapacity = _validator.ValidateMinCapacity(resolvedMinCapacity);
         validatedMinCapacity = _validator.AdjustMinCapacityToCapacity(validatedMinCapacity, validatedCapacity);
 
-        // Sync normalized values back to display so UI reflects validated state
+        // Sync normalized values back to display so UI reflects validated state.
+        // Crucially this also overwrites a null (cleared) cell with the resolved concrete
+        // number (0 for Min, the reverted value for Max), so the cell never renders empty
+        // after commit. HeroWorkshopDisplay has no INotifyPropertyChanged, so UpdateGroupedDisplays
+        // below rebuilds the bound collection to push these values to the grid (see gotchas).
         display.Capacity = validatedCapacity;
         display.MinCapacity = validatedMinCapacity;
 
@@ -322,7 +339,6 @@ public partial class MainViewModel
     // ═══════════════════════════════════════════════════════════════════════════
     // HERO DATA HELPERS
     // ═══════════════════════════════════════════════════════════════════════════
-
     private string ResolveFriendName(string? friendId)
     {
         if (string.IsNullOrEmpty(friendId)) return "";

@@ -326,14 +326,14 @@
                                                                               DropDownClosed="TypeComboBox_DropDownClosed"/>
                                                                 </Panel>
                                                                 <!-- Min (editable, numeric-only with select-all on focus) -->
-                                                                <TextBox Grid.Column="5" Text="{Binding MinCapacity, Mode=TwoWay}"
+                                                                <TextBox Grid.Column="5" Text="{Binding MinCapacity, Mode=TwoWay, Converter={StaticResource NullableIntConverter}}"
                                                                          BorderThickness="0" Background="Transparent" Padding="0" Margin="12,0"
                                                                          VerticalAlignment="Center" HorizontalContentAlignment="Center" Foreground="#333333"
                                                                          LostFocus="WorkshopField_LostFocus"
                                                                          GotFocus="NumericField_GotFocus"
                                                                          TextInput="NumericField_TextInput"/>
                                                                 <!-- Max (editable, numeric-only with select-all on focus) -->
-                                                                <TextBox Grid.Column="6" Text="{Binding Capacity, Mode=TwoWay}"
+                                                                <TextBox Grid.Column="6" Text="{Binding Capacity, Mode=TwoWay, Converter={StaticResource NullableIntConverter}}"
                                                                          BorderThickness="0" Background="Transparent" Padding="0" Margin="12,0"
                                                                          VerticalAlignment="Center" HorizontalContentAlignment="Center" Foreground="#333333"
                                                                          LostFocus="WorkshopField_LostFocus"

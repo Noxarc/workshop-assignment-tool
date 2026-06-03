@@ -67,6 +67,8 @@
             <converters:WorkshopTypeToChipBorderConverter x:Key="WorkshopTypeToChipBorder"/>
             <converters:WorkshopTypeToBadgeBackgroundConverter x:Key="WorkshopTypeToBadgeBackground"/>
             <converters:WorkshopTypeToBadgeForegroundConverter x:Key="WorkshopTypeToBadgeForeground"/>
+            <!-- Empty-string <-> int? for hero Min/Max cells: bypasses Avalonia's throwing built-in string->int? write conversion (TargetNullValue does NOT cover the write path) -->
+            <converters:NullableIntConverter x:Key="NullableIntConverter"/>
 
             <!-- ============================================== -->
             <!-- CENTRALIZED COLOR PALETTE                     -->

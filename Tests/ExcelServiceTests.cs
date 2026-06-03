@@ -50,19 +50,19 @@ public class ExcelServiceTests : IDisposable
 
         Assert.Equal("W2", workshops[1].Id);
         Assert.Equal("Painting", workshops[1].Name);
-        Assert.Equal(WorkshopType.Type2, workshops[1].Type);
+        Assert.Equal(WorkshopType.Type4, workshops[1].Type); // v0.3.0: b -> Type4 (both half-slots)
         Assert.Equal(25, workshops[1].Capacity);
         Assert.Equal(3, workshops[1].MinCapacity);
 
         Assert.Equal("W3", workshops[2].Id);
         Assert.Equal("Cooking", workshops[2].Name);
-        Assert.Equal(WorkshopType.Type3, workshops[2].Type);
+        Assert.Equal(WorkshopType.Type2, workshops[2].Type); // v0.3.0: c -> Type2 (first half)
         Assert.Equal(15, workshops[2].Capacity);
         Assert.Equal(0, workshops[2].MinCapacity);
 
         Assert.Equal("W4", workshops[3].Id);
         Assert.Equal("Music", workshops[3].Name);
-        Assert.Equal(WorkshopType.Type4, workshops[3].Type);
+        Assert.Equal(WorkshopType.Type3, workshops[3].Type); // v0.3.0: d -> Type3 (second half)
         Assert.Equal(30, workshops[3].Capacity);
         Assert.Equal(10, workshops[3].MinCapacity);
     }
@@ -97,7 +97,7 @@ public class ExcelServiceTests : IDisposable
         Assert.Single(workshops);
         Assert.Equal("W1", workshops[0].Id);
         Assert.Equal("TestWorkshop", workshops[0].Name);
-        Assert.Equal(WorkshopType.Type2, workshops[0].Type);
+        Assert.Equal(WorkshopType.Type4, workshops[0].Type); // v0.3.0: "b" -> Type4 (both half-slots)
         Assert.Equal(15, workshops[0].Capacity);
         Assert.Equal(3, workshops[0].MinCapacity);
     }
@@ -118,11 +118,11 @@ public class ExcelServiceTests : IDisposable
         // Act
         var (workshops, _) = _svc.LoadWorkshops(path);
 
-        // Assert
-        Assert.Equal(WorkshopType.Type1, workshops[0].Type);
-        Assert.Equal(WorkshopType.Type2, workshops[1].Type);
-        Assert.Equal(WorkshopType.Type3, workshops[2].Type);
-        Assert.Equal(WorkshopType.Type4, workshops[3].Type);
+        // Assert v0.3.0 mapping: a->Type1, b->Type4, c->Type2, d->Type3 (letters NOT positional)
+        Assert.Equal(WorkshopType.Type1, workshops[0].Type); // a = full day
+        Assert.Equal(WorkshopType.Type4, workshops[1].Type); // b = both half-slots / flexible
+        Assert.Equal(WorkshopType.Type2, workshops[2].Type); // c = first half
+        Assert.Equal(WorkshopType.Type3, workshops[3].Type); // d = second half
     }
 
     [Fact]

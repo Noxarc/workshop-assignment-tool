@@ -11,7 +11,7 @@
     <RootNamespace>WorkshopAssignment</RootNamespace>
     <AssemblyName>WorkshopAssignment</AssemblyName>
     <StartupObject>WorkshopAssignment.Program</StartupObject>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <Authors>Melwin</Authors>
     <Product>Workshop Assignment</Product>
     <Description>A local tool to assign people to timeslots and workshops using constraint optimization.</Description>

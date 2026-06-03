@@ -5,12 +5,20 @@ namespace WorkshopAssignment.Services;
 
 public class ExcelService
 {
+    // v0.3.0 relabel: Excel timeslot letters are INTENTIONALLY NOT positional to the Type
+    // numbers. The letters describe the user-facing slot concept; the Type enum drives internal
+    // behavior. Concept -> behavior mapping:
+    //   a = full day        -> Type1 (full-slot / spans entire day)
+    //   b = both half-slots  -> Type4 (flexible/both, two check-in sheets)
+    //   c = first half       -> Type2 (first slot only)
+    //   d = second half      -> Type3 (second slot only)
+    // Type1-4 BEHAVIORS ARE UNCHANGED; only which letter triggers each concept changed in v0.3.0.
     private static readonly Dictionary<string, WorkshopType> TimeslotMapping = new()
     {
         ["a"] = WorkshopType.Type1,
-        ["b"] = WorkshopType.Type2,
-        ["c"] = WorkshopType.Type3,
-        ["d"] = WorkshopType.Type4
+        ["b"] = WorkshopType.Type4,
+        ["c"] = WorkshopType.Type2,
+        ["d"] = WorkshopType.Type3
     };
 
     public (List<Workshop> Workshops, List<ImportWarning> Warnings) LoadWorkshops(string filePath)
@@ -704,7 +712,7 @@ public class ExcelService
         ws.Cell(2, 2).Value = "Workshop name";
         ws.Cell(2, 3).Value = "Max participants (default: 30)";
         ws.Cell(2, 4).Value = "Min participants (default: 0)";
-        ws.Cell(2, 5).Value = "a=Full day, b=Slot 2 only, c=Slot 3 only, d=Slot 2 or 3";
+        ws.Cell(2, 5).Value = "a=Full day, b=Slot 2 or 3, c=Slot 2 only, d=Slot 3 only";
         ws.Cell(2, 6).Value = "Room or location";
 
         // Style hints row

@@ -510,9 +510,23 @@ public class PdfService
                     }
                     else
                     {
-                        // Normal: separate columns for slot 2 and slot 3
-                        table.Cell().Element(CellStyle).Text(slots.Slot2Workshop ?? "");
-                        table.Cell().Element(CellStyle).Text(slots.Slot3Workshop ?? "");
+                        // Normal: separate columns for slot 2 and slot 3.
+                        // v0.3.0: highlight a missing slot assignment with a light-red background so
+                        // group supervisors instantly spot people who lack a workshop for that slot.
+                        // .Background(...) composes BEFORE .Element(CellStyle) so the CellStyle border
+                        // and padding still render on top of the tint; filled cells stay untinted.
+                        var slot2 = slots.Slot2Workshop;
+                        var slot3 = slots.Slot3Workshop;
+
+                        IContainer slot2Cell = table.Cell();
+                        if (string.IsNullOrEmpty(slot2))
+                            slot2Cell = slot2Cell.Background(Colors.Red.Lighten4);
+                        slot2Cell.Element(CellStyle).Text(slot2 ?? "");
+
+                        IContainer slot3Cell = table.Cell();
+                        if (string.IsNullOrEmpty(slot3))
+                            slot3Cell = slot3Cell.Background(Colors.Red.Lighten4);
+                        slot3Cell.Element(CellStyle).Text(slot3 ?? "");
                     }
                 }
             });
