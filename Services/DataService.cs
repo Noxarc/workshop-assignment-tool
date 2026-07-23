@@ -81,99 +81,117 @@ public class DataService
 
     private List<List<string>> ResolveFriendGroups(List<Person> persons, List<ImportWarning> warnings)
     {
-        var personMap = persons.ToDictionary(p => p.Id);
-        var visited = new HashSet<string>();
-        var groups = new List<List<string>>();
+        // Maximum members allowed in one friend group. The solver assigns each group
+        // atomically to a single workshop combo, so larger groups sharply reduce the
+        // set of feasible solutions (business rule 03ad9bd4). A connected friendship
+        // component bigger than this is split into subgroups below.
+        const int MaxGroupSize = 3;
 
-        // First, detect non-mutual friend references and collect persons involved
-        var nonMutualPersons = new HashSet<string>();
+        var personMap = persons.ToDictionary(p => p.Id);
+
+        // Build an UNDIRECTED friendship graph. A person's FriendId is treated as an
+        // edge (person <-> person.FriendId) REGARDLESS of reciprocity: if either party
+        // names the other, they belong in the same group. Grouping is then simply the
+        // connected components of that graph — the intended semantics per business rule
+        // 03ad9bd4 ("A->B->C becomes group [A,B,C]; circular references are valid and
+        // resolved").
+        //
+        // ROOT-CAUSE FIX: the previous implementation required DIRECT pairwise reciprocity
+        // (friend.FriendId == person.Id) and forced every "non-mutual" person to a solo
+        // group. Because the data model stores a SINGLE FriendId per person, three mutual
+        // friends can only be expressed as a CYCLE (P1->P2->P3->P1) in which no two people
+        // reciprocate directly. The old code therefore flagged all three as non-mutual,
+        // emitted each as a solo group, and the solver then placed them in different
+        // workshops — splitting real friend groups apart. Treating FriendId as an
+        // undirected edge makes that cycle one connected component that resolves to a
+        // single group of 3, which is exactly the reported bug's correct outcome.
+        var adjacency = new Dictionary<string, HashSet<string>>();
         foreach (var person in persons)
         {
-            if (person.FriendId != null && personMap.TryGetValue(person.FriendId, out var friend))
+            adjacency[person.Id] = new HashSet<string>();
+        }
+
+        foreach (var person in persons)
+        {
+            if (person.FriendId == null)
+                continue;
+
+            // Self-reference (A->A) is a no-op edge: the person simply stays solo.
+            // SelfReference warnings are ExcelService's responsibility at import time,
+            // not ours — emitting one here would duplicate that warning.
+            if (person.FriendId == person.Id)
+                continue;
+
+            if (personMap.ContainsKey(person.FriendId))
             {
-                // Check if the friend references back
-                if (friend.FriendId != person.Id)
-                {
-                    // Non-mutual: A references B but B doesn't reference A (or references someone else)
-                    // Warning mentions both persons for transparency, but only the initiator goes solo
-                    warnings.Add(new ImportWarning(WarningCategory.NonMutualFriend,
-                        $"Non-mutual friend reference: {person.Id} references {person.FriendId}, but not reciprocated"));
-                    nonMutualPersons.Add(person.Id);
-                }
+                // Undirected edge — reciprocity is NOT required.
+                adjacency[person.Id].Add(person.FriendId);
+                adjacency[person.FriendId].Add(person.Id);
             }
-            else if (person.FriendId != null && !personMap.ContainsKey(person.FriendId))
+            else
             {
-                // Friend doesn't exist
+                // The referenced friend is not in the assignable set: either a typo, or the
+                // friend was dropped earlier by preference filtering. No edge can form, so
+                // the person stays solo and we surface the broken reference.
                 warnings.Add(new ImportWarning(WarningCategory.InvalidFriend,
                     $"Person {person.Id} references non-existent friend {person.FriendId}"));
             }
         }
 
+        var visited = new HashSet<string>();
+        var groups = new List<List<string>>();
+
+        // Discover connected components in stable input order so the emitted group order is
+        // deterministic and preserves the run-after-preference-filtering ordering that
+        // BuildAssignmentInput relies on.
         foreach (var person in persons)
         {
-            if (visited.Contains(person.Id))
+            if (!visited.Add(person.Id))
                 continue;
 
-            // If person is involved in non-mutual reference, make them solo
-            if (nonMutualPersons.Contains(person.Id))
-            {
-                visited.Add(person.Id);
-                groups.Add(new List<string> { person.Id });
-                continue;
-            }
-
-            // BFS to find connected component (only following mutual references)
-            var group = new List<string>();
+            // BFS the undirected component reachable from this person.
+            var component = new List<string> { person.Id };
             var queue = new Queue<string>();
             queue.Enqueue(person.Id);
 
             while (queue.Count > 0)
             {
                 var current = queue.Dequeue();
-                if (visited.Contains(current))
-                    continue;
-
-                visited.Add(current);
-                group.Add(current);
-
-                if (personMap.TryGetValue(current, out var p) && p.FriendId != null)
+                foreach (var neighbor in adjacency[current])
                 {
-                    // Only follow if friend exists and is not in non-mutual set
-                    if (!visited.Contains(p.FriendId) &&
-                        personMap.ContainsKey(p.FriendId) &&
-                        !nonMutualPersons.Contains(p.FriendId))
+                    if (visited.Add(neighbor))
                     {
-                        queue.Enqueue(p.FriendId);
-                    }
-                }
-
-                // Also check if anyone references this person as friend (only mutual)
-                foreach (var other in persons)
-                {
-                    if (other.FriendId == current &&
-                        !visited.Contains(other.Id) &&
-                        !nonMutualPersons.Contains(other.Id))
-                    {
-                        queue.Enqueue(other.Id);
+                        component.Add(neighbor);
+                        queue.Enqueue(neighbor);
                     }
                 }
             }
 
-            // Check group size
-            if (group.Count > 3)
-            {
-                warnings.Add(new ImportWarning(WarningCategory.OversizedGroup,
-                    $"Friend group with {group.Count} members [{string.Join(",", group)}] exceeds max of 3, splitting into individuals"));
+            // Deterministic, stable member ordering by person Id (ordinal). This makes the
+            // subgroup membership reproducible when a component has to be split, so tests
+            // and real imports get the same explainable result on every run.
+            component.Sort(StringComparer.Ordinal);
 
-                // Split into individual groups
-                foreach (var memberId in group)
-                {
-                    groups.Add(new List<string> { memberId });
-                }
+            if (component.Count <= MaxGroupSize)
+            {
+                groups.Add(component);
             }
             else
             {
-                groups.Add(group);
+                // The social group is larger than a single group can hold. The solver places
+                // each group atomically, so we cannot keep everyone together — split into
+                // consecutive subgroups of up to MaxGroupSize in stable Id order (first 3
+                // stay together, the remainder forms the next subgroup(s), per business rule
+                // 03ad9bd4) and warn that the desired grouping had to be broken up.
+                warnings.Add(new ImportWarning(WarningCategory.OversizedGroup,
+                    $"Friend group with {component.Count} members [{string.Join(",", component)}] " +
+                    $"exceeds max of {MaxGroupSize}; split into subgroups of up to {MaxGroupSize} " +
+                    $"(ordered by person Id)"));
+
+                for (int i = 0; i < component.Count; i += MaxGroupSize)
+                {
+                    groups.Add(component.GetRange(i, Math.Min(MaxGroupSize, component.Count - i)));
+                }
             }
         }
 

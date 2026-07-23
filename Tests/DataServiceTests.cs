@@ -89,11 +89,16 @@ public class DataServiceTests
     }
 
     // ---------------------------------------------------------------
-    //  4. FriendGroups — Chain A-B-C
+    //  4. FriendGroups — Chain A-B-C (connected component -> one group of 3)
     // ---------------------------------------------------------------
     [Fact]
     public void FriendGroups_Chain_ABC()
     {
+        // A->B->C is a friend chain. FriendId is an undirected edge regardless of
+        // reciprocity, so A-B and B-C connect all three into one component. Connected-
+        // component grouping resolves it to a single group [A,B,C] (business rule
+        // 03ad9bd4: "A->B->C becomes group [A,B,C]"). The old mutual-pairs-only policy
+        // wrongly emitted three solo groups here.
         var workshops = new List<Workshop> { W("W2", WorkshopType.Type2), W("W3", WorkshopType.Type3), W("W4", WorkshopType.Type4) };
         var persons = new List<Person>
         {
@@ -104,12 +109,18 @@ public class DataServiceTests
 
         var result = _svc.BuildAssignmentInput(workshops, persons);
 
-        // Non-mutual friend references now result in solo groups
-        // A->B is not mutual (B->C), B->C is not mutual (C has no friend)
-        Assert.Equal(3, result.InputData.FriendGroups.Count);
-        Assert.All(result.InputData.FriendGroups, g => Assert.Single(g.MemberIds));
-        // Warnings for non-mutual references
-        Assert.Contains(result.Warnings, w => w.Category == WarningCategory.NonMutualFriend);
+        // Exactly one group containing all three — no split (size 3 == max).
+        Assert.Single(result.InputData.FriendGroups);
+        var group = result.InputData.FriendGroups[0];
+        Assert.Equal(3, group.MemberIds.Count);
+        Assert.Contains("A", group.MemberIds);
+        Assert.Contains("B", group.MemberIds);
+        Assert.Contains("C", group.MemberIds);
+
+        // No NonMutualFriend warning any more (mutual-pairs-only policy removed),
+        // and no oversized split for a 3-member component.
+        Assert.DoesNotContain(result.Warnings, w => w.Category == WarningCategory.NonMutualFriend);
+        Assert.DoesNotContain(result.Warnings, w => w.Category == WarningCategory.OversizedGroup);
     }
 
     // ---------------------------------------------------------------
@@ -163,7 +174,9 @@ public class DataServiceTests
     [Fact]
     public void FriendGroups_CrossFileRefs_Resolved()
     {
-        // Simulates persons from different files: A references B by ID
+        // Simulates persons merged from different files: A references B by ID, and B
+        // (from another file) has no FriendId. The undirected edge A-B still groups
+        // them into a single group of 2 — cross-file one-way references now resolve.
         var workshops = new List<Workshop> { W("W2", WorkshopType.Type2), W("W3", WorkshopType.Type3), W("W4", WorkshopType.Type4) };
         var persons = new List<Person>
         {
@@ -173,23 +186,26 @@ public class DataServiceTests
 
         var result = _svc.BuildAssignmentInput(workshops, persons);
 
-        // Non-mutual friend references now result in solo groups
-        // A->B is not mutual (B has no friendId)
-        Assert.Equal(2, result.InputData.FriendGroups.Count);
-        Assert.All(result.InputData.FriendGroups, g => Assert.Single(g.MemberIds));
-        // Warning for non-mutual reference
-        Assert.Contains(result.Warnings, w => w.Category == WarningCategory.NonMutualFriend);
+        // Single group containing both.
+        Assert.Single(result.InputData.FriendGroups);
+        var group = result.InputData.FriendGroups[0];
+        Assert.Equal(2, group.MemberIds.Count);
+        Assert.Contains("A", group.MemberIds);
+        Assert.Contains("B", group.MemberIds);
+
+        Assert.DoesNotContain(result.Warnings, w => w.Category == WarningCategory.NonMutualFriend);
     }
 
     // ---------------------------------------------------------------
-    //  8. FriendGroups — Oversized Group Split
+    //  8. FriendGroups — Oversized Group Split (chain of 4)
     // ---------------------------------------------------------------
     [Fact]
     public void FriendGroups_OversizedGroup_Split()
     {
         var workshops = new List<Workshop> { W("W2", WorkshopType.Type2), W("W3", WorkshopType.Type3), W("W4", WorkshopType.Type4) };
-        // Chain: A->B->C->D = non-mutual friend references
-        // A->B (B doesn't reference A), B->C (C doesn't reference B), C->D (D has no reference)
+        // Chain A->B->C->D. Undirected edges A-B, B-C, C-D connect all four into one
+        // component of 4, which exceeds the max group size of 3. It splits into
+        // consecutive subgroups of <=3 ordered stably by person Id: [A,B,C] + [D].
         var persons = new List<Person>
         {
             P("A", Prefs("W2", "W3", "W4"), friendId: "B"),
@@ -200,20 +216,30 @@ public class DataServiceTests
 
         var result = _svc.BuildAssignmentInput(workshops, persons);
 
-        // Non-mutual friend references result in 4 individual solo groups
-        Assert.Equal(4, result.InputData.FriendGroups.Count);
-        Assert.All(result.InputData.FriendGroups, g => Assert.Single(g.MemberIds));
-        // Non-mutual references generate NonMutualFriend warnings (not OversizedGroup)
-        Assert.Contains(result.Warnings, w => w.Category == WarningCategory.NonMutualFriend);
+        // Splits into a group of 3 and a group of 1.
+        Assert.Equal(2, result.InputData.FriendGroups.Count);
+
+        var tripleGroup = result.InputData.FriendGroups.Single(g => g.MemberIds.Count == 3);
+        Assert.Contains("A", tripleGroup.MemberIds);
+        Assert.Contains("B", tripleGroup.MemberIds);
+        Assert.Contains("C", tripleGroup.MemberIds);
+
+        var soloGroup = result.InputData.FriendGroups.Single(g => g.MemberIds.Count == 1);
+        Assert.Equal("D", soloGroup.MemberIds.Single());
+
+        // Exactly one OversizedGroup warning; the split path is what this test exercises.
+        Assert.Single(result.Warnings.Where(w => w.Category == WarningCategory.OversizedGroup));
+        Assert.DoesNotContain(result.Warnings, w => w.Category == WarningCategory.NonMutualFriend);
     }
 
     // ---------------------------------------------------------------
-    //  9. FriendGroups — Reverse Lookup
+    //  9. FriendGroups — Reverse Lookup (referenced person joins the group)
     // ---------------------------------------------------------------
     [Fact]
     public void FriendGroups_ReverseLookup()
     {
-        // A references B, but B has no FriendId. Non-mutual friend detection now applies.
+        // A->B; B has no FriendId of its own. B is pulled into A's group by the
+        // undirected edge (reverse direction) — they form a single group of 2.
         var workshops = new List<Workshop> { W("W2", WorkshopType.Type2), W("W3", WorkshopType.Type3), W("W4", WorkshopType.Type4) };
         var persons = new List<Person>
         {
@@ -223,12 +249,14 @@ public class DataServiceTests
 
         var result = _svc.BuildAssignmentInput(workshops, persons);
 
-        // Non-mutual friend references now result in solo groups
-        // A->B is not mutual (B has no friendId pointing back to A)
-        Assert.Equal(2, result.InputData.FriendGroups.Count);
-        Assert.All(result.InputData.FriendGroups, g => Assert.Single(g.MemberIds));
-        // Warning for non-mutual reference
-        Assert.Contains(result.Warnings, w => w.Category == WarningCategory.NonMutualFriend);
+        // Single group with both members.
+        Assert.Single(result.InputData.FriendGroups);
+        var group = result.InputData.FriendGroups[0];
+        Assert.Equal(2, group.MemberIds.Count);
+        Assert.Contains("A", group.MemberIds);
+        Assert.Contains("B", group.MemberIds);
+
+        Assert.DoesNotContain(result.Warnings, w => w.Category == WarningCategory.NonMutualFriend);
     }
 
     // ---------------------------------------------------------------
@@ -316,128 +344,99 @@ public class DataServiceTests
     }
 
     // ---------------------------------------------------------------
-    // 21. FriendGroups — Mutual Trio (Circular A→B, B→C, C→A)
+    // 21. FriendGroups — Mutual Trio (Circular A->B->C->A -> one group of 3)
     // ---------------------------------------------------------------
     [Fact]
-    public void FriendGroups_MutualTrio_CircularBecomesAllSolo()
+    public void FriendGroups_MutualTrio_Circular_ResolvesToOneGroup()
     {
-        // A→B, B→C, C→A forms a circular chain, but each individual
-        // reference is non-mutual (A→B but B→C, not B→A)
-        // Current implementation requires BIDIRECTIONAL mutual references
+        // A->B, B->C, C->A: three mutual friends. With a single FriendId per person,
+        // a real trio can only be expressed as a CYCLE — no two people reciprocate
+        // directly. Treating FriendId as an undirected edge, the cycle is one connected
+        // component that resolves to a SINGLE group of 3 (business rule 03ad9bd4:
+        // "circular references are valid and resolved"). This is the reported-bug shape;
+        // the old mutual-pairs-only policy wrongly split it into three solo groups.
         var workshops = TestHelpers.StandardWorkshops();
         var persons = new List<Person>
         {
             P("A", Prefs("W2", "W3", "W4"), friendId: "B"),  // A references B
-            P("B", Prefs("W2", "W3", "W4"), friendId: "C"),  // B references C (not A)
-            P("C", Prefs("W2", "W3", "W4"), friendId: "A"),  // C references A (not B)
+            P("B", Prefs("W2", "W3", "W4"), friendId: "C"),  // B references C
+            P("C", Prefs("W2", "W3", "W4"), friendId: "A"),  // C references A
         };
 
         var result = _svc.BuildAssignmentInput(workshops, persons);
 
-        // All three are non-mutual: A→B (B→C≠A), B→C (C→A≠B), C→A (A→B≠C)
-        // Each becomes a solo group
-        Assert.Equal(3, result.InputData.FriendGroups.Count);
-        Assert.All(result.InputData.FriendGroups, g => Assert.Single(g.MemberIds));
+        // One group containing all three.
+        Assert.Single(result.InputData.FriendGroups);
+        var group = result.InputData.FriendGroups[0];
+        Assert.Equal(3, group.MemberIds.Count);
+        Assert.Contains("A", group.MemberIds);
+        Assert.Contains("B", group.MemberIds);
+        Assert.Contains("C", group.MemberIds);
 
-        // Three non-mutual warnings (one for each person)
-        var nonMutualWarnings = result.Warnings.Where(w => w.Category == WarningCategory.NonMutualFriend).ToList();
-        Assert.Equal(3, nonMutualWarnings.Count);
+        // No NonMutualFriend warnings (policy removed) and no oversized split.
+        Assert.DoesNotContain(result.Warnings, w => w.Category == WarningCategory.NonMutualFriend);
+        Assert.DoesNotContain(result.Warnings, w => w.Category == WarningCategory.OversizedGroup);
     }
 
     // ---------------------------------------------------------------
-    // 22. FriendGroups — Mutual Quad (4 people, all mutual pairs)
+    // 22. FriendGroups — Two Separate Mutual Pairs Stay Independent
     // ---------------------------------------------------------------
     [Fact]
-    public void FriendGroups_MutualQuad_SplitWithWarning()
+    public void FriendGroups_TwoSeparatePairs_StayIndependent()
     {
-        // To create a 4-person connected group with single FriendId per person,
-        // we use a chain where mutual detection creates a connected component.
-        // A↔B (mutual pair), C↔D (mutual pair) - but these are separate groups.
-        //
-        // To connect them: A↔B, B↔C, C↔D creates:
-        // A→B mutual (B→? must be A for mutual, but we need B→C to connect to C)
-        //
-        // Actually, with single FriendId, we can only have mutual PAIRS.
-        // A 4-person "group" requires a chain: A→B, B→A would be mutual pair,
-        // but to extend to C and D, we need non-mutual refs which break the chain.
-        //
-        // Test scenario: Create 4 persons where BFS would connect them into one group
-        // by exploiting reverse lookup (if someone references a member, they get added).
-        // But reverse lookup only adds if NOT in nonMutualPersons set.
-        //
-        // Alternative: A→B, B→A (mutual), C→A (non-mutual adds C to nonMutual), D→C (non-mutual)
-        // This won't create a 4-person group either.
-        //
-        // Simplest scenario that COULD create oversized group:
-        // If we had no non-mutual detection, A→B→C→D chain would create 4-group via BFS.
-        // But with non-mutual detection, they all become solo.
-        //
-        // For this test: verify that 4+ people in a mutual chain trigger OversizedGroup warning.
-        // We need a TRUE mutual connected group of 4, which requires creative linking.
-        //
-        // ACTUAL TEST: Use two mutual pairs that share a common member somehow?
-        // Not possible with single FriendId.
-        //
-        // Let's test what happens with 4-way attempt: A↔B, C↔D (two separate pairs)
+        // A<->B and C<->D are two independent mutual pairs with no edge between them.
+        // They are two separate connected components -> two groups of 2. No component
+        // exceeds the cap, so there is no OversizedGroup split.
         var workshops = TestHelpers.StandardWorkshops();
         var persons = new List<Person>
         {
             P("A", Prefs("W2", "W3", "W4"), friendId: "B"),
-            P("B", Prefs("W2", "W3", "W4"), friendId: "A"),  // A↔B mutual pair
+            P("B", Prefs("W2", "W3", "W4"), friendId: "A"),  // A<->B mutual pair
             P("C", Prefs("W2", "W3", "W4"), friendId: "D"),
-            P("D", Prefs("W2", "W3", "W4"), friendId: "C"),  // C↔D mutual pair
+            P("D", Prefs("W2", "W3", "W4"), friendId: "C"),  // C<->D mutual pair
         };
 
         var result = _svc.BuildAssignmentInput(workshops, persons);
 
-        // Two separate mutual pairs, not one oversized group
+        // Two separate groups, each of size 2.
         Assert.Equal(2, result.InputData.FriendGroups.Count);
         Assert.All(result.InputData.FriendGroups, g => Assert.Equal(2, g.MemberIds.Count));
 
-        // No oversized warning (each group is size 2, not >3)
+        // No oversized split and no NonMutualFriend warnings.
         Assert.DoesNotContain(result.Warnings, w => w.Category == WarningCategory.OversizedGroup);
-
-        // No non-mutual warnings (all pairs are bidirectional)
         Assert.DoesNotContain(result.Warnings, w => w.Category == WarningCategory.NonMutualFriend);
     }
 
     // ---------------------------------------------------------------
-    // 23. FriendGroups — Already In Group (C→B but B is paired with A)
+    // 23. FriendGroups — One-Way Pointer Into a Mutual Pair (joins the group)
     // ---------------------------------------------------------------
     [Fact]
-    public void FriendGroups_AlreadyInGroup_RemoveRefAndWarn()
+    public void FriendGroups_OneWayIntoMutualPair_FormsGroupOfThree()
     {
-        // A↔B is a mutual pair
-        // C→B: C wants to join B, but B→A (not C), so C→B is non-mutual
-        //
-        // Only the initiator (C) is poisoned — the target (B) keeps its
-        // valid mutual pair with A. Result: A-B group preserved, C goes solo.
+        // A<->B are a mutual pair; C->B is a one-way reference into that pair.
+        // FriendId is an undirected edge, so C-B connects C to the {A,B} component:
+        // all three form ONE group of 3. (Under the removed mutual-pairs-only policy,
+        // C was forced solo and only A-B stayed together.)
         var workshops = TestHelpers.StandardWorkshops();
         var persons = new List<Person>
         {
             P("A", Prefs("W2", "W3", "W4"), friendId: "B"),
-            P("B", Prefs("W2", "W3", "W4"), friendId: "A"),  // A↔B mutual pair preserved
-            P("C", Prefs("W2", "W3", "W4"), friendId: "B"),  // C→B non-mutual, only C goes solo
+            P("B", Prefs("W2", "W3", "W4"), friendId: "A"),  // A<->B mutual pair
+            P("C", Prefs("W2", "W3", "W4"), friendId: "B"),  // C->B one-way, still joins
         };
 
         var result = _svc.BuildAssignmentInput(workshops, persons);
 
-        // Two groups: A-B pair preserved, C goes solo
-        Assert.Equal(2, result.InputData.FriendGroups.Count);
+        // Single group with all three members.
+        Assert.Single(result.InputData.FriendGroups);
+        var group = result.InputData.FriendGroups[0];
+        Assert.Equal(3, group.MemberIds.Count);
+        Assert.Contains("A", group.MemberIds);
+        Assert.Contains("B", group.MemberIds);
+        Assert.Contains("C", group.MemberIds);
 
-        // Find the A-B group (size 2) and the C group (size 1)
-        var pairGroup = result.InputData.FriendGroups.Single(g => g.MemberIds.Count == 2);
-        var soloGroup = result.InputData.FriendGroups.Single(g => g.MemberIds.Count == 1);
-
-        Assert.Contains("A", pairGroup.MemberIds);
-        Assert.Contains("B", pairGroup.MemberIds);
-        Assert.Equal("C", soloGroup.MemberIds.Single());
-
-        // Warning about non-mutual reference (C→B) — mentions both for transparency
-        Assert.Contains(result.Warnings, w =>
-            w.Category == WarningCategory.NonMutualFriend &&
-            w.Message.Contains("C") &&
-            w.Message.Contains("B"));
+        Assert.DoesNotContain(result.Warnings, w => w.Category == WarningCategory.NonMutualFriend);
+        Assert.DoesNotContain(result.Warnings, w => w.Category == WarningCategory.OversizedGroup);
     }
 
     // ---------------------------------------------------------------
@@ -554,27 +553,59 @@ public class DataServiceTests
     }
 
     // ---------------------------------------------------------------
-    // 26. FriendGroups — NonMutual Does Not Break Valid Mutual Pair
+    // 26. FriendGroups — Three-Cycle Regression (P1->P2->P3->P1)
     // ---------------------------------------------------------------
     [Fact]
-    public void FriendGroups_NonMutual_DoesNotBreak_ValidMutualPair()
+    public void FriendGroups_ThreeCycle_P1P2P3_ResolvesToSingleGroupOfThree()
     {
-        // THIS IS THE KEY REGRESSION TEST for the non-mutual friend poisoning bug fix.
-        //
-        // Scenario: A↔B is a valid mutual pair (both reference each other).
-        //           C→B is a one-way (non-mutual) reference.
-        //
-        // BUG (before fix): When detecting C→B as non-mutual, BOTH C and B were
-        // added to nonMutualPersons. This "poisoned" B, breaking the valid A↔B pair.
-        // Result: all three became solo groups — WRONG.
-        //
-        // FIX: Only the initiator (C) is added to nonMutualPersons, not the target (B).
-        // This preserves the valid A↔B mutual pair while correctly making C solo.
-        //
-        // Expected after fix:
-        //   - A and B form a group of 2 (mutual pair preserved)
-        //   - C is a solo group (non-mutual initiator)
-        //   - One NonMutualFriend warning for C→B
+        // REGRESSION TEST for the reported bug: a mutual friend trio got split across
+        // three different workshops. Root cause: a single FriendId per person means three
+        // mutual friends can only form a CYCLE (P1->P2->P3->P1) where no two reciprocate
+        // directly. The old mutual-pairs-only policy flagged all three as non-mutual and
+        // forced each to a solo group; the solver (atomic per group) then placed them
+        // apart. Connected-component grouping over the undirected friendship graph keeps
+        // the cycle together as one group of 3.
+        var workshops = new List<Workshop>
+        {
+            W("W2", WorkshopType.Type2),
+            W("W3", WorkshopType.Type3),
+            W("W4", WorkshopType.Type4),
+        };
+        var persons = new List<Person>
+        {
+            P("P1", Prefs("W2", "W3", "W4"), friendId: "P2"),  // P1 -> P2
+            P("P2", Prefs("W2", "W3", "W4"), friendId: "P3"),  // P2 -> P3
+            P("P3", Prefs("W2", "W3", "W4"), friendId: "P1"),  // P3 -> P1 (closes the cycle)
+        };
+
+        var result = _svc.BuildAssignmentInput(workshops, persons);
+
+        // The three friends land in exactly ONE group of three.
+        Assert.Single(result.InputData.FriendGroups);
+        var group = result.InputData.FriendGroups[0];
+        Assert.Equal(3, group.MemberIds.Count);
+        Assert.Contains("P1", group.MemberIds);
+        Assert.Contains("P2", group.MemberIds);
+        Assert.Contains("P3", group.MemberIds);
+
+        // Preferences are pooled so the solver can place the whole trio together.
+        Assert.NotEmpty(group.PooledPreferences);
+
+        // No NonMutualFriend warning (mutual-pairs-only policy removed) and no split.
+        Assert.DoesNotContain(result.Warnings, w => w.Category == WarningCategory.NonMutualFriend);
+        Assert.DoesNotContain(result.Warnings, w => w.Category == WarningCategory.OversizedGroup);
+    }
+
+    // ---------------------------------------------------------------
+    // 27. FriendGroups — Star Component Exceeds Cap, Splits Deterministically
+    // ---------------------------------------------------------------
+    [Fact]
+    public void FriendGroups_StarComponent_ExceedsCap_SplitsDeterministically()
+    {
+        // A<->B mutual, plus C->B and D->B: all four are one connected component
+        // (a star centred on B). That exceeds the max group size of 3, so it is split
+        // into consecutive subgroups of <=3 ordered stably by person Id: [A,B,C] + [D].
+        // One OversizedGroup warning is emitted. (Old policy: A-B pair + C solo + D solo.)
         var workshops = new List<Workshop>
         {
             W("W2", WorkshopType.Type2),
@@ -584,52 +615,39 @@ public class DataServiceTests
         var persons = new List<Person>
         {
             P("A", Prefs("W2", "W3", "W4"), friendId: "B"),
-            P("B", Prefs("W2", "W3", "W4"), friendId: "A"),  // A↔B mutual pair
-            P("C", Prefs("W2", "W3", "W4"), friendId: "B"),  // C→B one-way (B→A, not B→C)
+            P("B", Prefs("W2", "W3", "W4"), friendId: "A"),  // A<->B mutual pair
+            P("C", Prefs("W2", "W3", "W4"), friendId: "B"),  // C->B one-way
+            P("D", Prefs("W2", "W3", "W4"), friendId: "B"),  // D->B one-way
         };
 
         var result = _svc.BuildAssignmentInput(workshops, persons);
 
-        // After fix: A-B pair preserved, C is solo → 2 groups total
+        // Component of 4 splits into a group of 3 and a group of 1.
         Assert.Equal(2, result.InputData.FriendGroups.Count);
 
-        // Find the pair group (size 2) and verify it contains A and B
-        var pairGroup = result.InputData.FriendGroups.FirstOrDefault(g => g.MemberIds.Count == 2);
-        Assert.NotNull(pairGroup);
-        Assert.Contains("A", pairGroup.MemberIds);
-        Assert.Contains("B", pairGroup.MemberIds);
+        // Deterministic split by person Id (ordinal): [A,B,C] together, D alone.
+        var tripleGroup = result.InputData.FriendGroups.Single(g => g.MemberIds.Count == 3);
+        Assert.Contains("A", tripleGroup.MemberIds);
+        Assert.Contains("B", tripleGroup.MemberIds);
+        Assert.Contains("C", tripleGroup.MemberIds);
 
-        // Find the solo group and verify it contains C
-        var soloGroup = result.InputData.FriendGroups.FirstOrDefault(g => g.MemberIds.Count == 1);
-        Assert.NotNull(soloGroup);
-        Assert.Equal("C", soloGroup.MemberIds[0]);
+        var soloGroup = result.InputData.FriendGroups.Single(g => g.MemberIds.Count == 1);
+        Assert.Equal("D", soloGroup.MemberIds.Single());
 
-        // Exactly one NonMutualFriend warning for C→B
-        var nonMutualWarnings = result.Warnings
-            .Where(w => w.Category == WarningCategory.NonMutualFriend)
-            .ToList();
-        Assert.Single(nonMutualWarnings);
-        Assert.Contains("C", nonMutualWarnings[0].Message);
+        // Exactly one OversizedGroup warning; no NonMutualFriend warnings.
+        Assert.Single(result.Warnings.Where(w => w.Category == WarningCategory.OversizedGroup));
+        Assert.DoesNotContain(result.Warnings, w => w.Category == WarningCategory.NonMutualFriend);
     }
 
     // ---------------------------------------------------------------
-    // 27. FriendGroups — Multiple NonMutual Pointers, Mutual Pair Preserved
+    // 28. FriendGroups — One-Way Reference Forms a Group of Two
     // ---------------------------------------------------------------
     [Fact]
-    public void FriendGroups_NonMutual_MultiplePointers_MutualPairPreserved()
+    public void FriendGroups_OneWayRef_FormsGroupOfTwo()
     {
-        // Extended version of the poisoning regression test.
-        // A↔B is a valid mutual pair.
-        // C→B AND D→B are both one-way references to B.
-        //
-        // After fix: Only C and D are added to nonMutualPersons (initiators only).
-        // B is NOT poisoned, so A↔B mutual pair is preserved.
-        //
-        // Expected:
-        //   - A and B form a group of 2 (mutual pair intact despite two external pointers)
-        //   - C is a solo group
-        //   - D is a solo group
-        //   - Two NonMutualFriend warnings (one for C→B, one for D→B)
+        // C->B one-way; B names no one. FriendId is an undirected edge, so C-B still
+        // groups them: they form a single group of 2. (Old mutual-pairs-only policy
+        // wrongly emitted two solo groups plus a NonMutualFriend warning.)
         var workshops = new List<Workshop>
         {
             W("W2", WorkshopType.Type2),
@@ -638,79 +656,20 @@ public class DataServiceTests
         };
         var persons = new List<Person>
         {
-            P("A", Prefs("W2", "W3", "W4"), friendId: "B"),
-            P("B", Prefs("W2", "W3", "W4"), friendId: "A"),  // A↔B mutual pair
-            P("C", Prefs("W2", "W3", "W4"), friendId: "B"),  // C→B one-way
-            P("D", Prefs("W2", "W3", "W4"), friendId: "B"),  // D→B one-way
+            P("B", Prefs("W2", "W3", "W4")),                  // B names no friend
+            P("C", Prefs("W2", "W3", "W4"), friendId: "B"),   // C->B one-way
         };
 
         var result = _svc.BuildAssignmentInput(workshops, persons);
 
-        // 3 groups total: A-B pair + C solo + D solo
-        Assert.Equal(3, result.InputData.FriendGroups.Count);
+        // Single group containing both.
+        Assert.Single(result.InputData.FriendGroups);
+        var group = result.InputData.FriendGroups[0];
+        Assert.Equal(2, group.MemberIds.Count);
+        Assert.Contains("B", group.MemberIds);
+        Assert.Contains("C", group.MemberIds);
 
-        // A-B pair preserved
-        var pairGroup = result.InputData.FriendGroups.FirstOrDefault(g => g.MemberIds.Count == 2);
-        Assert.NotNull(pairGroup);
-        Assert.Contains("A", pairGroup.MemberIds);
-        Assert.Contains("B", pairGroup.MemberIds);
-
-        // C and D are each in solo groups
-        var soloGroups = result.InputData.FriendGroups.Where(g => g.MemberIds.Count == 1).ToList();
-        Assert.Equal(2, soloGroups.Count);
-        var soloIds = soloGroups.Select(g => g.MemberIds[0]).ToHashSet();
-        Assert.Contains("C", soloIds);
-        Assert.Contains("D", soloIds);
-
-        // Two NonMutualFriend warnings (C→B and D→B)
-        var nonMutualWarnings = result.Warnings
-            .Where(w => w.Category == WarningCategory.NonMutualFriend)
-            .ToList();
-        Assert.Equal(2, nonMutualWarnings.Count);
-    }
-
-    // ---------------------------------------------------------------
-    // 28. FriendGroups — NonMutual, No Mutual Pair, Both Solo
-    // ---------------------------------------------------------------
-    [Fact]
-    public void FriendGroups_NonMutual_NoMutualPair_BothSolo()
-    {
-        // C→B one-way, but B has NO friend reference at all.
-        // There is no mutual pair to protect — B is simply a target of a one-way reference.
-        //
-        // Expected:
-        //   - C is solo (non-mutual initiator)
-        //   - B is solo (no friend reference, so just a regular person)
-        //   - One NonMutualFriend warning for C→B
-        var workshops = new List<Workshop>
-        {
-            W("W2", WorkshopType.Type2),
-            W("W3", WorkshopType.Type3),
-            W("W4", WorkshopType.Type4),
-        };
-        var persons = new List<Person>
-        {
-            P("B", Prefs("W2", "W3", "W4")),                  // B has no friend reference
-            P("C", Prefs("W2", "W3", "W4"), friendId: "B"),   // C→B one-way
-        };
-
-        var result = _svc.BuildAssignmentInput(workshops, persons);
-
-        // Both persons become solo groups
-        Assert.Equal(2, result.InputData.FriendGroups.Count);
-        Assert.All(result.InputData.FriendGroups, g => Assert.Single(g.MemberIds));
-
-        // Verify both are present
-        var memberIds = result.InputData.FriendGroups.SelectMany(g => g.MemberIds).ToHashSet();
-        Assert.Contains("B", memberIds);
-        Assert.Contains("C", memberIds);
-
-        // One NonMutualFriend warning for C→B
-        var nonMutualWarnings = result.Warnings
-            .Where(w => w.Category == WarningCategory.NonMutualFriend)
-            .ToList();
-        Assert.Single(nonMutualWarnings);
-        Assert.Contains("C", nonMutualWarnings[0].Message);
-        Assert.Contains("B", nonMutualWarnings[0].Message);
+        // No NonMutualFriend warning any more.
+        Assert.DoesNotContain(result.Warnings, w => w.Category == WarningCategory.NonMutualFriend);
     }
 }

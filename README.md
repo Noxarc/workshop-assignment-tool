@@ -35,7 +35,7 @@ Download the latest release for your platform from the [Releases](../../releases
 
 ## Tech Stack
 
-- [.NET 9](https://dotnet.microsoft.com/) + [Avalonia 11](https://avaloniaui.net/) (cross-platform UI)
+- [.NET 10](https://dotnet.microsoft.com/) + [Avalonia 11](https://avaloniaui.net/) (cross-platform UI)
 - [Google OR-Tools](https://developers.google.com/optimization) (constraint optimization solver)
 - [ClosedXML](https://github.com/ClosedXML/ClosedXML) (Excel I/O)
 - [QuestPDF](https://www.questpdf.com/) (PDF generation)
