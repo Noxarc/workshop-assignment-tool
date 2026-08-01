@@ -11,7 +11,7 @@
     <RootNamespace>WorkshopAssignment</RootNamespace>
     <AssemblyName>WorkshopAssignment</AssemblyName>
     <StartupObject>WorkshopAssignment.Program</StartupObject>
-    <Version>0.3.1</Version>
+    <Version>0.3.2</Version>
     <Authors>Melwin</Authors>
     <Product>Workshop Assignment</Product>
     <Description>A local tool to assign people to timeslots and workshops using constraint optimization.</Description>
@@ -25,6 +25,8 @@
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.2" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.2" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.2.2" />
+    <!-- Security pin (NU1903 / GHSA-xrw6-gwf8-vvr9): force transitive Tmds.DBus.Protocol off vulnerable 0.20.0 pulled via Avalonia.Desktop -> Avalonia.X11 -> Avalonia.FreeDesktop. 0.21.3 is the minimal safe target - 0.22.0/0.23.0 are vulnerable again under a second advisory range; next clean line is 0.92.0+. API-compatible with Avalonia 11.2.2 (same 0.2x line). -->
+    <PackageReference Include="Tmds.DBus.Protocol" Version="0.21.3" />
     
     <!-- Avalonia diagnostics (debug only) -->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.2.2" />
